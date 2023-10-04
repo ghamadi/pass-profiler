@@ -1,10 +1,16 @@
 {
   "name": "pass-profiler",
+  "author": "Ghaleb Hamadi",
+  "repository": {
+    "type": "Git",
+    "url": "https://github.com/ghamadi/pass-profiler"
+  },
   "version": "0.0.1",
   "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "type": "module",
   "files": [
     "dist/",
     "README.md"
