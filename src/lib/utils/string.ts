@@ -7,7 +7,7 @@
  * // returns 'abc'
  * removeInterleavingPairs('ab2c')
  *
- * // returns '123'
+ * // returns '1bc'
  * removeInterleavingPairs('1ab2c3')
  */
 export function stripInterleavingPairs(str: string) {
