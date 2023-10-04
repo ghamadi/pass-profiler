@@ -88,15 +88,18 @@ Assuming all passwords are equally likely, there are `N^L` possible combinations
 
 The number of bits required to represent all possible passwords is a direct measure of the unpredictability of a single, randomly chosen password. Each added bit doubles the number of possible representations, thus doubling the unpredictability.
 
-If we have `X` bits of entropy, then we have `2^X` equally likely possibilities for a password. In other words, the higher the entropy, the more guesses a computer must make to crack the password.
+If we have `X` bits of entropy, then we have `2^X` equally likely possibilities for a password. In other words, the higher the entropy, the more guesses a computer must make to crack the password. You have probably seen this relationship in the famous [comic by XKCD](https://xkcd.com/936/).
+<p align="center">
+  <img src="https://github.com/ghamadi/pass-profiler/assets/48609768/bd052faf-acff-4e49-913b-c6a7a37107d3">
+</p>
 
 ### Why the Password Sanitization Step?
 
 The entropy computation formula assumes all characters within the pool have an equal chance of selection. However, when users create a password, this assumption is often false.
 
-It is very hard for us to select a completely random password; which affects the reliability of the entropy value. For instance, a password like: `1111111111111111111111` would be considered strong based solely on entropy, but is in fact very predictable. Rule-based attacks would quickly crack passwords like this, which is why many systems impose composition rules.
+Selecting a completely random password is challenging for us, and this affects the reliability of the entropy value. Consider the password: `1111111111111111111111`. Solely based on entropy, it would be deemed strong. However, in reality, it's highly predictable. Rule-based attacks would quickly crack passwords like this, which is why many systems impose composition rules.
 
-However, by reintroducing randomness before computing entropy, we can make the value more reliable. By identifying and stripping out patterns and common keywords, the sanitized password has a higher degree of randomness. Removing patterns also nullifies the length's deceiving effect introduced by these patterns.
+By stripping predictable patterns from passwords before computing entropy, we reintroduce a degree of randomness and enhance the reliability of the entropy value. Identifying and eliminating patterns and common keywords not only increases the randomness of the sanitized password but also negates the misleading effect of length introduced by these patterns.
 
 ## Conclusion
 
