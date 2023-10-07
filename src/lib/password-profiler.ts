@@ -47,13 +47,23 @@ export default class PasswordProfiler {
     });
   }
 
+  /**
+   * Returns a 2D array of sanitizers list.
+   *
+   * If `exhaustive` is `true`, the 2D array will be a list of all the permutations of the sanitizers.
+   * Otherwise, it will only contain the provided santizers in the given order.
+   *
+   * If custom sanitizers are not provided, the default sanitizers are used.
+   */
   private setupSanitizersList(options: ProfilerOptions) {
-    // TODO: Add an `assert` function to make sure this.rejectedPatterns is setup
-    const patterns = this.rejectedPatterns ?? this.setupRejectedPatterns(options);
+    assert(
+      this.rejectedPatterns,
+      'Initialize `rejectedPatterns` before calling `setupSanitizersList`.'
+    );
 
     const sanitizers = options.sanitizers ?? [
       (str) => stripReatedStrings(str),
-      (str) => patterns.reduce((out, pattern) => stripPattern(out, pattern), str),
+      (str) => this.rejectedPatterns.reduce((out, pattern) => stripPattern(out, pattern), str),
       (str) => stripSequentialStrings(str, 1),
       (str) => stripSequentialStrings(str, -1),
       (str) => stripInterleavingPairs(str),
