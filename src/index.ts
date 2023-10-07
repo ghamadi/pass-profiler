@@ -1,11 +1,6 @@
-import { PasswordProfile } from './lib/PasswordProfile';
+import PasswordProfiler from '~/lib/password-profiler';
+import type { PasswordProfileOptions } from '~/lib/password-profile';
 import type { StrengthRange, PasswordStrengthRanges } from '~/lib/constants/strength-map';
-import type { ProfileOptions, PasswordStrengthReport } from '~/lib/password-profile';
 
-export {
-  PasswordProfile,
-  StrengthRange,
-  PasswordStrengthRanges,
-  ProfileOptions,
-  PasswordStrengthReport,
-};
+export type { PasswordProfileOptions, PasswordStrengthRanges, StrengthRange };
+export { PasswordProfiler };

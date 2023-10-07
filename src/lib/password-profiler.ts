@@ -1,4 +1,5 @@
-import { PasswordProfile, PasswordStrengthRanges } from '~/index';
+import PasswordProfile from '~/lib/password-profile';
+import { PasswordStrengthRanges } from '~/lib/constants/strength-map';
 import { DEFAULT_STRENGTH_RANGES } from '~/lib/constants/strength-map';
 import COMMON_PATTERNS from '~/lib/constants/common-patterns';
 import {
@@ -34,7 +35,7 @@ export default class PasswordProfiler {
   private sanitizersList: SanitizersList;
   private rejectedPatterns: string[];
 
-  constructor(options: ProfilerOptions) {
+  constructor(options: ProfilerOptions = {}) {
     this.strengthRanges = this.setupStrengthRanges(options);
     this.rejectedPatterns = this.setupRejectedPatterns(options);
     this.sanitizersList = this.setupSanitizersList(options);

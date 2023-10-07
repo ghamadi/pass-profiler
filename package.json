@@ -16,7 +16,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "build": "rm -rf out && tsup src/index.ts --format cjs,esm --dts",
     "format": "prettier --write 'src/**/*.ts'",
     "lint:ts": "tsc"
   },
@@ -25,5 +25,8 @@
     "prettier": "^3.0.3",
     "tsup": "^7.2.0",
     "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@types/node": "^20.8.3"
   }
 }

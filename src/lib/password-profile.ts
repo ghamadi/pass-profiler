@@ -1,29 +1,23 @@
 import { PasswordStrengthRanges } from '~/lib/constants/strength-map';
 import { SanitizersList } from '~/lib/password-profiler';
+import { sha1 } from '~/lib/utils/crypto';
 
-export type ProfileOptions = {
+export type PasswordProfileOptions = {
   strengthRanges: PasswordStrengthRanges;
   sanitizersList: SanitizersList;
   rejectedPatterns: string[];
 };
 
-export type PasswordStrengthReport = {
-  score: number;
-  label: string;
-  isPwned?: boolean;
-  timesPwned?: number;
-};
-
 /**
  * Represents a password, providing properties that can be used to analyze its characteristics and strength.
  */
-export class PasswordProfile {
+export default class PasswordProfile {
   private readonly password: string;
-  private readonly options: ProfileOptions;
+  private readonly options: PasswordProfileOptions;
 
   private cachedSanitizedOutput?: string[];
 
-  constructor(passwordString: string, options: ProfileOptions) {
+  constructor(passwordString: string, options: PasswordProfileOptions) {
     this.password = passwordString;
     this.options = options;
   }
@@ -44,9 +38,6 @@ export class PasswordProfile {
     return !!this.password.match(/[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~\s]/);
   }
 
-  /**
-   * The size of the character pool used in the password.
-   */
   get poolSize() {
     let n = 0;
     if (this.hasNumbers) n += 10;
@@ -98,5 +89,9 @@ export class PasswordProfile {
     }
 
     return strengthRanges.slice(-1)[0].label;
+  }
+
+  async getHash() {
+    return sha1(this.password);
   }
 }
