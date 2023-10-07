@@ -1,15 +1,10 @@
-import COMMON_PATTERNS from '~/lib/constants/common-patterns';
-import { DEFAULT_STRENGTH_RANGES, PasswordStrengthRanges } from '~/lib/constants/strength-map';
-import {
-  stripInterleavingPairs,
-  stripReatedStrings,
-  stripSequentialStrings,
-  stripPattern,
-} from '~/lib/utils/string';
+import { PasswordStrengthRanges } from '~/lib/constants/strength-map';
+import { SanitizersList } from '~/lib/password-profiler';
 
-export type PasswordProfileOptions = {
-  strengthRanges?: PasswordStrengthRanges;
-  rejectedPatterns?: string[];
+export type ProfileOptions = {
+  strengthRanges: PasswordStrengthRanges;
+  sanitizersList: SanitizersList;
+  rejectedPatterns: string[];
 };
 
 export type PasswordStrengthReport = {
@@ -23,19 +18,14 @@ export type PasswordStrengthReport = {
  * Represents a password, providing properties that can be used to analyze its characteristics and strength.
  */
 export class PasswordProfile {
-  private password: string;
-  private rejectedPatterns: string[];
-  private strengthRanges: PasswordStrengthRanges;
-  private cachedSanitizedOutput: string | undefined;
+  private readonly password: string;
+  private readonly options: ProfileOptions;
 
-  constructor(passwordString: string, options: PasswordProfileOptions = {}) {
+  private cachedSanitizedOutput?: string[];
+
+  constructor(passwordString: string, options: ProfileOptions) {
     this.password = passwordString;
-    this.strengthRanges = options.strengthRanges ?? DEFAULT_STRENGTH_RANGES;
-
-    // remove duplicates and sort from longest to shortest
-    this.rejectedPatterns = [
-      ...new Set([...COMMON_PATTERNS, ...(options.rejectedPatterns ?? [])]),
-    ].sort((p1, p2) => p2.length - p1.length);
+    this.options = options;
   }
 
   get hasNumbers() {
@@ -67,87 +57,46 @@ export class PasswordProfile {
   }
 
   /**
-   * The sanitized version of the password from which predictable patterns are removed.
-   *
-   * @example
-   * // returns `A23B4C7`
-   * new Password('Aaa123Bbb456Ccc789').sanitized;
+   * Maps the list of sanitizers to a list of sanitized versions of the password.
    */
-  get sanitized() {
-    if (this.cachedSanitizedOutput) {
-      return this.cachedSanitizedOutput;
+  get sanitizedVersions() {
+    if (!this.cachedSanitizedOutput) {
+      const { sanitizersList } = this.options;
+      this.cachedSanitizedOutput = sanitizersList.map((sanitizers) =>
+        sanitizers.reduce((output, sanitizer) => sanitizer(output), this.password)
+      );
     }
-
-    let output: string = this.password;
-
-    // remove duplicates and sort from longest to shortest
-    let patternsToStrip = [...new Set([...COMMON_PATTERNS, ...this.rejectedPatterns])].sort(
-      (p1, p2) => p2.length - p1.length
-    );
-
-    // Strip out the key patterns first
-    patternsToStrip.forEach((pattern) => {
-      output = stripPattern(output, pattern);
-    });
-
-    output = stripReatedStrings(output);
-    output = stripInterleavingPairs(output);
-    output = stripSequentialStrings(output, 1);
-    output = stripSequentialStrings(output, -1);
-
-    return output;
+    return this.cachedSanitizedOutput;
   }
 
   /**
-   * The effective entropy of the password.
+   * The average entropy from the list of sanitized passwords.
    *
    * Entropy is a measure of unpredictability and is used to estimate the password's strength.
-   * The entropy is computed based on the pool size of the original password but uses the length of the sanitized password.
-   *
-   * @example
-   * // returns `35.73` instead of `107.18`
-   * new Password('Aaa123Bbb456Ccc789').entropy;
+   * The input for the entropy formula is the original pool size and the sanitized password's length.
    */
   get entropy() {
-    return Math.log2(this.poolSize ** this.sanitized.length);
+    const sum = this.sanitizedVersions.reduce(
+      (sum, sanitized) => sum + Math.log2(this.poolSize ** sanitized.length),
+      0
+    );
+    return parseFloat((sum / this.sanitizedVersions.length).toFixed(2));
   }
 
   /**
-   * Maps the computed entropy to a strength label based on the provided strengthRanges option.
-   * If `stregthRanges` is not provided, the `DEFAULT_STRENGTH_RANGES` constant is used.
-   *
-   * If `pwnedPasswords` is provided, and `password` is found within, then it is considered to be
-   * in the lowest strength bracket regardless of its entropy.
+   * Maps the computed entropy to a strength label based on the provided strengthRanges.
    */
-  getStrength(pwnedPasswords?: string[]): PasswordStrengthReport {
-    let entropy = this.entropy;
-    let ranges = this.strengthRanges;
-    let timesPwned =
-      pwnedPasswords?.filter((pwnedPass) => pwnedPass === this.password).length ?? undefined;
+  get strength() {
+    const { strengthRanges } = this.options;
+    const { entropy } = this;
 
-    if (pwnedPasswords && timesPwned) {
-      return {
-        score: 0,
-        isPwned: true,
-        label: ranges[0].label,
-        timesPwned,
-      };
-    }
-
-    let isPwned = pwnedPasswords ? false : undefined;
-
-    for (let { label, range } of ranges) {
+    for (let { label, range } of strengthRanges) {
       let [min, max] = range;
       if (entropy >= min && entropy <= max) {
-        return { score: this.entropy, label, isPwned, timesPwned };
+        return label;
       }
     }
 
-    return {
-      isPwned,
-      timesPwned,
-      score: this.entropy,
-      label: ranges.slice(-1)[0].label,
-    };
+    return strengthRanges.slice(-1)[0].label;
   }
 }

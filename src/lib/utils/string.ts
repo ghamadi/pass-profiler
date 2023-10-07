@@ -105,6 +105,8 @@ export function stripSequentialStrings(str: string, direction: 1 | -1) {
  * stripReatedStrings("JavaScript");
  */
 export function stripReatedStrings(str: string) {
+  // Any repeated pattern can at most be half of the string's length
+  // start by checking half the characters to see if they are repeated, and shrink the tested pattern
   for (let i = Math.floor(str.length / 2); i > 0; i--) {
     const pattern = new RegExp(`(.{${i}})\\1+`, 'gi');
     str = str.replace(pattern, '$1');
