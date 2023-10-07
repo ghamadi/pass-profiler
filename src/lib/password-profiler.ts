@@ -9,6 +9,7 @@ import {
 } from '~/lib/utils/string';
 import { permute } from '~/lib/utils/array';
 import InvalidRangeError from '~/lib/errors/invalid-range';
+import { assert } from '~/lib/utils/errorts';
 
 export type Sanitizers = ((str: string) => string)[];
 
@@ -77,23 +78,28 @@ export default class PasswordProfiler {
 
   private setupStrengthRanges(options: ProfilerOptions) {
     const { strengthRanges } = options;
-    // validate the custom ranges
-    if (strengthRanges) {
-      let previousMax: number;
-      for (const { range } of strengthRanges) {
-        const [min, max] = range;
-        previousMax ??= min;
-        if (max < min) {
-          throw new InvalidRangeError([min, max]);
-        }
-        if (min < previousMax) {
-          throw new InvalidRangeError([min, max], `The range should be after ${previousMax}`);
-        }
-        previousMax = max;
-      }
-      return strengthRanges;
+
+    if (!strengthRanges) {
+      return DEFAULT_STRENGTH_RANGES;
     }
-    return DEFAULT_STRENGTH_RANGES;
+
+    let previousMax: number;
+
+    // validate the custom ranges
+    for (const { range } of strengthRanges) {
+      const [min, max] = range;
+      previousMax ??= min;
+
+      if (max < min) {
+        throw new InvalidRangeError([min, max]);
+      }
+      if (min <= previousMax) {
+        throw new InvalidRangeError([min, max], `The range should start at ${previousMax + 0.01}`);
+      }
+      previousMax = max;
+    }
+
+    return strengthRanges;
   }
 
   private setupRejectedPatterns(options: ProfilerOptions) {
