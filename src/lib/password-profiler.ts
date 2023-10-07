@@ -1,4 +1,4 @@
-import { PasswordStrengthRanges } from '~/index';
+import { PasswordProfile, PasswordStrengthRanges } from '~/index';
 import { DEFAULT_STRENGTH_RANGES } from '~/lib/constants/strength-map';
 import COMMON_PATTERNS from '~/lib/constants/common-patterns';
 import {
@@ -8,6 +8,7 @@ import {
   stripSequentialStrings,
 } from '~/lib/utils/string';
 import { permute } from '~/lib/utils/array';
+import InvalidRangeError from '~/lib/errors/invalid-range';
 
 export type Sanitizers = ((str: string) => string)[];
 
@@ -29,16 +30,22 @@ export type ProfilerOptions = {
 
 export default class PasswordProfiler {
   private strengthRanges: PasswordStrengthRanges;
-  private sanitizers: SanitizersList;
+  private sanitizersList: SanitizersList;
   private rejectedPatterns: string[];
 
   constructor(options: ProfilerOptions) {
     this.strengthRanges = this.setupStrengthRanges(options);
     this.rejectedPatterns = this.setupRejectedPatterns(options);
-    this.sanitizers = this.setupSanitizersList(options);
+    this.sanitizersList = this.setupSanitizersList(options);
   }
 
-  parse(password: string) {}
+  parse(password: string) {
+    return new PasswordProfile(password, {
+      rejectedPatterns: this.rejectedPatterns,
+      sanitizersList: this.sanitizersList,
+      strengthRanges: this.strengthRanges,
+    });
+  }
 
   private setupSanitizersList(options: ProfilerOptions) {
     // TODO: Add an `assert` function to make sure this.rejectedPatterns is setup
@@ -66,13 +73,11 @@ export default class PasswordProfiler {
       for (const { range } of strengthRanges) {
         const [min, max] = range;
         previousMax ??= min;
-        if (min < previousMax) {
-          throw new Error(`Invalid Range: The range ${[min, max]} should be after ${previousMax}`);
-        }
         if (max < min) {
-          throw new Error(
-            `Invalid Range: ${[min, max]}. The left edge should be smaller than the right edge.`
-          );
+          throw new InvalidRangeError([min, max]);
+        }
+        if (min < previousMax) {
+          throw new InvalidRangeError([min, max], `The range should be after ${previousMax}`);
         }
         previousMax = max;
       }
