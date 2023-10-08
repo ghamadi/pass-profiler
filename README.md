@@ -34,7 +34,7 @@ The value of entropy is then mapped to a strength label using a predefined mappi
 ### Basic Usage
 
 ```ts
-import PasswordProfiler from 'password-profiler';
+import PasswordProfiler from 'pass-profiler';
 
 const profiler = new PasswordProfiler();
 const profile = profiler.parse('Aaa1bbb2ccc3ddd4eee5');
@@ -69,7 +69,7 @@ The `PasswordProfiler` will look for these patterns in the password and remove t
 > Regular expressions should be wrapped with `/` and cannot have flags. (e.g., `/someword[0-9]+/`)
 
 ```ts
-import PasswordProfiler from 'password-profiler';
+import PasswordProfiler from 'pass-profiler';
 
 const profiler = new PasswordProfiler({
   rejectedPatterns: ['ghaleb'],
