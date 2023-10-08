@@ -67,11 +67,16 @@ export default class PasswordProfile {
    * The input for the entropy formula is the original pool size and the sanitized password's length.
    */
   get entropy() {
-    const sum = this.sanitizedVersions.reduce(
-      (sum, sanitized) => sum + Math.log2(this.poolSize ** sanitized.length),
-      0
+    // const sum = this.sanitizedVersions.reduce(
+    //   (sum, sanitized) => sum + Math.log2(this.poolSize ** sanitized.length),
+    //   0
+    // );
+    // return parseFloat((sum / this.sanitizedVersions.length).toFixed(2));
+    return parseFloat(
+      Math.min(
+        ...this.sanitizedVersions.map((sanitized) => Math.log2(this.poolSize ** sanitized.length))
+      ).toFixed(2)
     );
-    return parseFloat((sum / this.sanitizedVersions.length).toFixed(2));
   }
 
   /**
