@@ -46,7 +46,7 @@ console.log(profile.strength); // 'Very Weak'
 
 > **Note:**
 >
-> The password has a clearly predictable pattern, and is likely not hard to crack, but would pass as a very strong password with many password checkers.
+> The password above has a clearly predictable pattern, and is likely not hard to crack, but would pass as a very strong password with many password checkers.
 >
 > These include [Kasperky's password checker](https://password.kaspersky.com) and the [UIC password checker](https://www.uic.edu/apps/strong-password/).
 
@@ -64,7 +64,7 @@ The `PasswordProfiler` will look for these patterns in the password and remove t
 
 > **Note:**
 >
-> All values will be used in a case-insensitive match, you should not worry about the case of your pattern, nor should you expect the profiler to respect the casing. This ensures a more pessimistic computation of entropy.
+> All matching of values is case _insensitive_, you should not worry about the case of your pattern, nor should you expect the profiler to respect the casing. This ensures a more pessimistic computation of entropy.
 >
 > Regular expressions should be wrapped with `/` and cannot have flags. (e.g., `/someword[0-9]+/`)
 
