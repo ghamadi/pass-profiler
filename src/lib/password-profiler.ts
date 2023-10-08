@@ -64,8 +64,8 @@ export default class PasswordProfiler {
     );
 
     const sanitizers = options.sanitizers ?? [
-      (str) => stripRepeatedStrings(str),
       (str) => this.rejectedPatterns.reduce((out, pattern) => stripPattern(out, pattern), str),
+      (str) => stripRepeatedStrings(str),
       (str) => stripSequentialStrings(str, 1),
       (str) => stripSequentialStrings(str, -1),
       (str) => stripInterleavingPairs(str),

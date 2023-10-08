@@ -104,7 +104,7 @@ export function stripSequentialStrings(str: string, direction: 1 | -1) {
   [...sequences]
     .sort((s1, s2) => s2.length - s1.length)
     .forEach((sequence) => {
-      const regex = new RegExp(sequence, 'gi');
+      const regex = new RegExp(escapeRegExp(sequence), 'gi');
       output = output.replace(regex, sequence[0]);
     });
 
@@ -134,6 +134,13 @@ export function stripRepeatedStrings(str: string) {
 }
 
 export function stripPattern(str: string, pattern: string) {
-  const regex = new RegExp(pattern, 'gi');
+  const regex = new RegExp(escapeRegExp(pattern), 'gi');
   return str.replace(regex, pattern[0]);
+}
+
+/**
+ * Escapes special characters in a string to make it safe for use as a regular expression pattern.
+ */
+export function escapeRegExp(str: string) {
+  return str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
