@@ -5,7 +5,7 @@ import COMMON_PATTERNS from '~/lib/constants/common-patterns';
 import {
   stripInterleavingPairs,
   stripPattern,
-  stripReatedStrings,
+  stripRepeatedStrings,
   stripSequentialStrings,
 } from '~/lib/utils/string';
 import { permute } from '~/lib/utils/array';
@@ -64,7 +64,7 @@ export default class PasswordProfiler {
     );
 
     const sanitizers = options.sanitizers ?? [
-      (str) => stripReatedStrings(str),
+      (str) => stripRepeatedStrings(str),
       (str) => this.rejectedPatterns.reduce((out, pattern) => stripPattern(out, pattern), str),
       (str) => stripSequentialStrings(str, 1),
       (str) => stripSequentialStrings(str, -1),
