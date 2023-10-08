@@ -19,7 +19,8 @@
     "build": "rm -rf out && tsup src/index.ts --format cjs,esm --dts",
     "format": "prettier --write 'src/**/*.ts'",
     "lint:ts": "tsc",
-    "test": "jest"
+    "test": "jest",
+    "script": "tsup scripts/$SCRIPT.ts --out-dir scripts/out && clear && node scripts/out/$SCRIPT.cjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.26.2",

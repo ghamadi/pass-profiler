@@ -57,7 +57,7 @@ export default class PasswordProfile {
         sanitizers.reduce((output, sanitizer) => sanitizer(output), this.password)
       );
     }
-    return this.cachedSanitizedOutput;
+    return [...new Set(this.cachedSanitizedOutput)];
   }
 
   /**
