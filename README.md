@@ -10,7 +10,7 @@ The algorithm measures a password's strength in three main steps:
 
 The library first determines the presence of different character types in the password.
 
-### 2. Password Sanitzation
+### 2. Password sanitization
 
 The password is sanitized by removing predictable patterns. This step serves two purposes:
 
@@ -34,29 +34,92 @@ The value of entropy is then mapped to a strength label using a predefined mappi
 ### Basic Usage
 
 ```ts
-import { PasswordProfile } from 'pass-profiler';
+import PasswordProfiler from 'password-profiler';
 
-const passProfile = new PasswordProfile('Aaa123Bbb456Ccc789');
-console.log(passProfile.poolSize); // 62
-console.log(passProfile.sanitized); // "A23B4C7"
-console.log(passProfile.entropy); // 41.68
-console.log(passProfile.getStrength()); // Weak
+const profiler = new PasswordProfiler();
+const profile = profiler.parse('Aaa1bbb2ccc3ddd4eee5');
+
+console.log(profile.sanitzedVersions); // ['Ace5']
+console.log(profile.entropy); // 20.68
+console.log(profile.strength); // 'Very Weak'
 ```
 
-### Custom Strength Ranges
+> **Note:**
+>
+> The password has a clearly predictable pattern, and is likely not hard to crack, but would pass as a very strong password with many password checkers.
+>
+> These include [Kasperky's password checker](https://password.kaspersky.com) and the [UIC password checker](https://www.uic.edu/apps/strong-password/).
+
+### Advanced Usage
+
+The `PasswordProfiler` constructor accepts configuration options to customize the sanitization step.
+
+#### 1. `rejectedPatterns`
+
+In many cases, certain words or patterns that are contextually relevant to a given application can reduce entropy. A common example for this would be the user's first name, family name, username, etc...
+
+The `PasswordProfiler` will look for these patterns in the password and remove them (down to the first character) as part of the sanitization process.
+
+`rejectedPatterns` can be in passed as plain strings or regular expressions. All rejected patterns will be used in a case-insensitive match.
+
+> **Note:**
+>
+> All values will be used in a case-insensitive match, you should not worry about the case of your pattern, nor should you expect the profiler to respect the casing. This ensures a more pessimistic computation of entropy.
+>
+> Regular expressions should be wrapped with `/` and cannot have flags. (e.g., `/someword[0-9]+/`)
 
 ```ts
-const options = {
-  strengthRanges: [
-    { label: 'Weak', range: [0, 40] },
-    { label: 'Moderate', range: [41, 70] },
-    { label: 'Strong', range: [71, 100] },
-    // ... add more if needed
-  ],
-};
+import PasswordProfiler from 'password-profiler';
 
-const myPassProfile = new PasswordProfile('MyPassword123', options);
+const profiler = new PasswordProfiler({
+  rejectedPatterns: ['ghaleb'],
+});
+const profile = profiler.parse("ghaleb'sPa$$word");
+
+console.log(profile.sanitzedVersions); // ["g'sP"]
+console.log(profile.entropy); // 25.71
+console.log(profile.strength); // 'Very Weak'
 ```
+
+#### 2. `sanitizers`
+
+The `PasswordProfiler` generates 5 sanitizing steps:
+
+1. Strip down rejected patterns (predefined common patterns + `customPatterns`)
+2. Strip down substring that are consequtively repeated (e.g., `aaabbb` => `ab`)
+3. Strip down characters that are ascendingly sequential
+4. Strip down characters that are descendingly sequential
+5. Strip down pairs of interleaving letters & numbers (e.g., `a1b2` => `a1`)
+
+By default, these steps will run in this order, with the output of each step piped as the input of the next. By passing an array of sanitizer callbacks to the `PasswordProfiler` you can replace these steps with your custom sanitization steps.
+
+#### 3. `exhaustive`
+
+When `true` the `PasswordProfile` will generate all possible permutations of the `sanitizers` and run all of them to generate a list of unique sanitized passwords representing all possible outputs based on the given `sanitizers`.
+
+The computed entropy would be the _minimum_ entropy computed from all the generated versions by default.
+
+Due to the deliberate order of the default sanitizers, the values will rarely differ when the `exhaustive` mode is enabled.
+
+#### 4. `strict`
+
+This is `true` by default.
+
+When `false`:
+
+1. Repeated strings are matched with a case-sensitive check (`JavaJAVA` => `JavaJAVA`)
+2. The entropy computed in `exhaustive` mode is the _average_ of all entropies
+3. Finding sequential letters is case-sensitive (`aBc` is not considered sequential)
+
+When `true`:
+
+1. `JavaJAVA` is sanitized to `Java`
+2. Entropy is the _minimum_ value in `exhaustive` mode
+3. `aBc` and `abc` are both considered sequential
+
+> **Note:**
+>
+> This configuration is not yet supported. At this stage, the profiler only operates in strict mode.
 
 ## Motivation
 
@@ -74,11 +137,11 @@ A password verifier that imposes composition rules suffers from three main weakn
 2. Users, being human, often respond in predictable patterns to fulfill the rules
 3. Constraints can make the resulting password harder to remember
 
-Because password cracking is almost never a simple brute-force effort, these limitations can increase the vulnaribility of a password by decreasing its unpredictability. Composition rules also mistakenly suggest that a password is strong if and only if it lacks any pattern, which is not necessarily true.
+Because password cracking is almost never a simple brute-force effort, these limitations can increase the vulnerability of a password by decreasing its unpredictability. Composition rules also mistakenly suggest that a password is strong if and only if it lacks any pattern, which is not necessarily true.
 
 For example, the password `Done_Wind_Brown1234_Pa$sword` is quite strong despite containing a variation of "password" and a predictable sequence "1234". Its varied composition, unclear overall pattern, and 28-character length make it robust.
 
-A verifier shouldn't reject such passwords using boolean rules like "no sequential numbers". Instead, accounting for the presence of predictable patterns allows the verifier to strike a balance between imposing needless limitations and enabling weak passwords, disguised as string, such as `aaaBBBcccDDDeee@@@123`.
+A verifier shouldn't reject such passwords using binary rules like "no sequential numbers". Instead, accounting for the presence of predictable patterns allows the verifier to strike a balance between imposing needless limitations and enabling weak passwords, disguised as string, such as `aaaBBBcccDDDeee@@@123`.
 
 ### Understanding Entropy
 
@@ -89,6 +152,7 @@ Assuming all passwords are equally likely, there are `N^L` possible combinations
 The number of bits required to represent all possible passwords is a direct measure of the unpredictability of a single, randomly chosen password. Each added bit doubles the number of possible representations, thus doubling the unpredictability.
 
 If we have `X` bits of entropy, then we have `2^X` equally likely possibilities for a password. In other words, the higher the entropy, the more guesses a computer must make to crack the password. You have probably seen this relationship in the famous [comic by XKCD](https://xkcd.com/936/).
+
 <p align="center">
   <img src="https://github.com/ghamadi/pass-profiler/assets/48609768/bd052faf-acff-4e49-913b-c6a7a37107d3">
 </p>
