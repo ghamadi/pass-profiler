@@ -107,15 +107,8 @@ This is `true` by default.
 
 When `false`:
 
-1. Repeated strings are matched with a case-sensitive check (`JavaJAVA` => `JavaJAVA`)
+1. Repeated strings matching becomes case sensitive (`JavaJAVA` => `JavaJAVA`)
 2. The entropy computed in `exhaustive` mode is the _average_ of all entropies
-3. Finding sequential letters is case-sensitive (`aBc` is not considered sequential)
-
-When `true`:
-
-1. `JavaJAVA` is sanitized to `Java`
-2. Entropy is the _minimum_ value in `exhaustive` mode
-3. `aBc` and `abc` are both considered sequential
 
 > **Note:**
 >
