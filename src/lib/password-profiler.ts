@@ -17,8 +17,8 @@ export type Sanitizers = ((str: string) => string)[];
 export type SanitizersList = Sanitizers[];
 
 export type ProfilerOptions = {
-  // When true, the parser runs all permutations of the sanitization steps and outputs average entropy
-  exhaustive?: boolean;
+  // Defaults to true. When false, the entropy used is the average value
+  strict?: boolean;
 
   // The ranges used to map the password's strength based on its entropy
   strengthRanges?: PasswordStrengthRanges;
@@ -34,11 +34,13 @@ export default class PasswordProfiler {
   private strengthRanges: PasswordStrengthRanges;
   private sanitizersList: SanitizersList;
   private rejectedPatterns: string[];
+  private strict: boolean;
 
   constructor(options: ProfilerOptions = {}) {
     this.strengthRanges = this.setupStrengthRanges(options);
     this.rejectedPatterns = this.setupRejectedPatterns(options);
     this.sanitizersList = this.setupSanitizersList(options);
+    this.strict = options.strict ?? true;
   }
 
   parse(password: string) {
@@ -46,6 +48,7 @@ export default class PasswordProfiler {
       rejectedPatterns: this.rejectedPatterns,
       sanitizersList: this.sanitizersList,
       strengthRanges: this.strengthRanges,
+      strict: this.strict,
     });
   }
 
@@ -71,10 +74,7 @@ export default class PasswordProfiler {
       (str) => stripInterleavingPairs(str),
     ];
 
-    if (options.exhaustive) {
-      return permute(sanitizers);
-    }
-    return [sanitizers];
+    return permute(sanitizers);
   }
 
   private setupStrengthRanges(options: ProfilerOptions) {

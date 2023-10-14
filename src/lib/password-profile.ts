@@ -6,6 +6,7 @@ export type PasswordProfileOptions = {
   strengthRanges: PasswordStrengthRanges;
   sanitizersList: SanitizersList;
   rejectedPatterns: string[];
+  strict: boolean;
 };
 
 /**
@@ -38,6 +39,25 @@ export default class PasswordProfile {
     return !!this.password.match(/[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~\s]/);
   }
 
+  /**
+   * Returns an array with symbols representing the composition of the password
+   *
+   * - U => Uppercase
+   * - L => Lowercase
+   * - D => Digit
+   * - S => Special character
+   */
+  get composition() {
+    return (['U', 'L', 'D', 'S'] as const).filter((c) => {
+      return (
+        (c === 'U' && this.hasUpperCaseLetters) ||
+        (c === 'L' && this.hasLowerCaseLetters) ||
+        (c === 'D' && this.hasNumbers) ||
+        (c === 'S' && this.hasSymbols)
+      );
+    });
+  }
+
   get poolSize() {
     let n = 0;
     if (this.hasNumbers) n += 10;
@@ -61,22 +81,26 @@ export default class PasswordProfile {
   }
 
   /**
-   * The average entropy from the list of sanitized passwords.
+   * The effective entropy from the list of sanitized passwords.
+   * Uses the minimum of all possible entropy values in strict mode, and the average otherwise.
    *
    * Entropy is a measure of unpredictability and is used to estimate the password's strength.
    * The input for the entropy formula is the original pool size and the sanitized password's length.
    */
   get entropy() {
-    // const sum = this.sanitizedVersions.reduce(
-    //   (sum, sanitized) => sum + Math.log2(this.poolSize ** sanitized.length),
-    //   0
-    // );
-    // return parseFloat((sum / this.sanitizedVersions.length).toFixed(2));
-    return parseFloat(
-      Math.min(
-        ...this.sanitizedVersions.map((sanitized) => Math.log2(this.poolSize ** sanitized.length))
-      ).toFixed(2)
+    if (this.options.strict) {
+      return parseFloat(
+        Math.min(
+          ...this.sanitizedVersions.map((sanitized) => Math.log2(this.poolSize ** sanitized.length))
+        ).toFixed(2)
+      );
+    }
+
+    const sum = this.sanitizedVersions.reduce(
+      (sum, sanitized) => sum + Math.log2(this.poolSize ** sanitized.length),
+      0
     );
+    return parseFloat((sum / this.sanitizedVersions.length).toFixed(2));
   }
 
   /**
