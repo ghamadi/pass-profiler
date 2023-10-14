@@ -1,5 +1,4 @@
 import { PasswordProfiler } from '~/index';
-import { stripInterleavingPairs, stripSequentialStrings } from '~/lib/utils/string';
 
 const passwords = [
   'AAbbCCddEEffGGHH',
@@ -8,6 +7,8 @@ const passwords = [
   'A1b2C3D4e8F6',
   'A1b5c3d4e5f6',
   'A1b0C9D4e8F6',
+  'A1b0C9D4e8F9',
+  'A1b0C9D4e8F9o',
   'a1b2c3d4e5f6g7',
   'a1b2c3d4e5f6g7h8',
   'aa1bb2cc3dd4',
@@ -23,33 +24,22 @@ const passwords = [
 
 const profiler1 = new PasswordProfiler();
 
-const profiles = passwords
-  .sort((s1, s2) => s1.length - s2.length)
-  .map((pass) => {
-    const profile = profiler1.parse(pass);
-    let Composition = profile.composition.join(',');
-    return {
-      Password: pass,
-      Composition,
-      Sanitized: profile.sanitizedVersions,
-      Length: pass.length,
-      Entropy: profile.entropy,
-      Strength: profile.strength,
-    };
-  });
+const profiles = passwords.map((pass) => {
+  const profile = profiler1.parse(pass);
+  let Composition = profile.composition.join(',');
+  return {
+    Password: pass,
+    Composition,
+    Sanitized: profile.sanitizedVersions,
+    Length: pass.length,
+    Entropy: profile.entropy,
+    Strength: profile.strength,
+  };
+});
 
-console.log(stripInterleavingPairs('a1b2c3d4'));
-console.log(stripInterleavingPairs('a1b5c3d8'));
-
-const pairs = ['abc', 'abc', 'cba', 'cba', 'wxyzabc', 'wxyzcba', 'dabce'].map((str) => ({
-  str,
-  asc: stripSequentialStrings(str, 1),
-  desc: stripSequentialStrings(str, -1),
-}));
-
-// passwords.forEach((pass) => console.log(stripInterleavingPairs(pass)));
-
-console.table(pairs);
-console.log('\nDefault Options');
-console.table(profiles);
+console.log('\nDefault Options (sorted by length & composition)');
+console.table(
+  profiles.sort((p1, p2) => p1.Composition.length - p2.Composition.length || p1.Length - p2.Length)
+);
+console.log('\nDefault Options (sorted by entropy)');
 console.table(profiles.sort((p1, p2) => p1.Entropy - p2.Entropy));
