@@ -4,6 +4,7 @@ const passwords = [
   'AAbbCCddEEffGGHH',
   'a1b2c3d4e5f6g7h8i9j',
   'a1b2c3d4e5f6',
+  'a1b2c3d4e3f8',
   'A1b2C3D4e8F6',
   'A1b5c3d4e5f6',
   'A1b0C9D4e8F6',

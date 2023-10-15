@@ -17,7 +17,7 @@ export type Sanitizers = ((str: string) => string)[];
 export type SanitizersList = Sanitizers[];
 
 export type ProfilerOptions = {
-  // Defaults to true. When false, the entropy used is the average value
+  // When true, the entropy used is computed as the minimum instead of the average
   strict?: boolean;
 
   // The ranges used to map the password's strength based on its entropy
@@ -43,6 +43,10 @@ export default class PasswordProfiler {
     this.strict = options.strict ?? true;
   }
 
+  /**
+   * Returns a `PasswordProfile` instance for the parameter `password`
+   * based on the `ProfilerOptions`
+   */
   parse(password: string) {
     return new PasswordProfile(password, {
       rejectedPatterns: this.rejectedPatterns,

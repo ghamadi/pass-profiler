@@ -10,8 +10,6 @@
  * - by a quarter if the numbers correspond to the letter's position (e.g., A1b2)
  * - by a quarter if both letters in the pairs are of the same case (e.g., A3B7)
  *
- * The default `minLength` is `2`.
- *
  * @example
  * // returns 'a1b2'
  * removeInterleavingPairs('a1b2c3d4')
@@ -20,39 +18,25 @@
  * removeInterleavingPairs('a1b5c3d8')
  */
 export function stripInterleavingPairs(str: string) {
-  const computeLength = (
-    match: string,
-    char1: string,
-    digit1: string,
-    char2: string,
-    digit2: string
-  ) => {
-    const [charCode1, charCode2] = [
-      char1.toLowerCase().charCodeAt(0),
-      char2.toLowerCase().charCodeAt(0),
-    ];
+  return str.replace(/([a-z][0-9]){2}|([0-9][a-z]){2}/gi, (match) => {
+    const chars = match.match(/[a-z]/gi) ?? [];
+    const digits = match.match(/[0-9]/g) ?? [];
 
-    let end = match.length * 0.75;
-    if (charCode1 - 96 === +digit1 && charCode2 - 96 === +digit2) {
-      end *= 0.75;
-    }
-    if (isUpperCase(char1 + char2) || isLowerCase(char1 + char2)) {
-      end *= 0.75;
-    }
-    return end;
-  };
+    const digitsMatchLetterPositions = chars.every((char, i) => {
+      let charCode = char.toLowerCase().charCodeAt(0) - 96;
+      return charCode === +digits[i];
+    });
 
-  return str.replace(/([a-z][0-9]){2}|([0-9][a-z]){2}/gi, (match, $1, $2) => {
-    let char1: string, digit1: string, char2: string, digit2: string;
-    let sanitizedLength = match.length;
-    // console.log({ match, $1, $2 });
-    if ($1) {
-      [char1, digit1, char2, digit2] = match;
-      sanitizedLength = computeLength(match, char1, digit1, char2, digit2);
-    } else if ($2) {
-      [digit1, char1, digit2, char2] = match;
-      sanitizedLength = computeLength(match, char1, digit1, char2, digit2);
+    // in the worst case (e.g., a1b2) the pattern reduced to 1 character
+    // in the best case (e.g., A5b7) the pattern is reduced to 3 characters
+    let sanitizedLength = match.length * 0.75;
+    if (digitsMatchLetterPositions) {
+      sanitizedLength *= 0.75;
     }
+    if (isLowerCase(chars?.join('')) || isUpperCase(chars.join(''))) {
+      sanitizedLength *= 0.75;
+    }
+
     return match.slice(0, sanitizedLength);
   });
 }
