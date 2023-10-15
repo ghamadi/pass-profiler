@@ -17,8 +17,8 @@ export type Sanitizers = ((str: string) => string)[];
 export type SanitizersList = Sanitizers[];
 
 export type ProfilerOptions = {
-  // When true, the parser runs all permutations of the sanitization steps and outputs average entropy
-  exhaustive?: boolean;
+  // When true, the entropy used is computed as the minimum instead of the average
+  strict?: boolean;
 
   // The ranges used to map the password's strength based on its entropy
   strengthRanges?: PasswordStrengthRanges;
@@ -34,18 +34,24 @@ export default class PasswordProfiler {
   private strengthRanges: PasswordStrengthRanges;
   private sanitizersList: SanitizersList;
   private rejectedPatterns: string[];
+  private strict: boolean;
 
   constructor(options: ProfilerOptions = {}) {
     this.strengthRanges = this.setupStrengthRanges(options);
     this.rejectedPatterns = this.setupRejectedPatterns(options);
     this.sanitizersList = this.setupSanitizersList(options);
+    this.strict = options.strict ?? false;
   }
 
+  /**
+   * Returns a `PasswordProfile` instance for the parameter `password` based on the `ProfilerOptions`
+   */
   parse(password: string) {
     return new PasswordProfile(password, {
       rejectedPatterns: this.rejectedPatterns,
       sanitizersList: this.sanitizersList,
       strengthRanges: this.strengthRanges,
+      strict: this.strict,
     });
   }
 
@@ -63,18 +69,19 @@ export default class PasswordProfiler {
       'Initialize `rejectedPatterns` before calling `setupSanitizersList`.'
     );
 
-    const sanitizers = options.sanitizers ?? [
+    const sanitizersList: SanitizersList = permute(
+      options.sanitizers ?? [
+        (str) => stripRepeatedStrings(str),
+        (str) => stripSequentialStrings(str, 1),
+        (str) => stripSequentialStrings(str, -1),
+        (str) => stripInterleavingPairs(str),
+      ]
+    ).map((sanitizers) => [
       (str) => this.rejectedPatterns.reduce((out, pattern) => stripPattern(out, pattern), str),
-      (str) => stripRepeatedStrings(str),
-      (str) => stripSequentialStrings(str, 1),
-      (str) => stripSequentialStrings(str, -1),
-      (str) => stripInterleavingPairs(str),
-    ];
+      ...sanitizers,
+    ]);
 
-    if (options.exhaustive) {
-      return permute(sanitizers);
-    }
-    return [sanitizers];
+    return sanitizersList;
   }
 
   private setupStrengthRanges(options: ProfilerOptions) {

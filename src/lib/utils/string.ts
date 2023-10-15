@@ -1,68 +1,61 @@
 /**
- * Removes interleaving letter-digit pairs or digit-letter pairs from a string.
- * Interleaving pairs are only considered when there are at least two consecutive pairs.
+ * Strips interleaving pairs of alphabets and digits from the input string.
  *
- * If a pair contain numbers that match the position of the letter (e.g., `a1b2`)
- * then the two pairs is stripped down to the first letter only. Otherswise, the two pairs
- * are stripped down to the first pair.
+ * The function looks for sequences in a string that follow one of two patterns:
+ * 1. Letter followed by a number, repeated at least twice (e.g., a1b2c3...).
+ * 2. Number followed by a letter, repeated at least twice (e.g., 1a2b3c...).
+ *
+ * Matching strings are reduced in length over three steps:
+ * - by a quarter as an initial penalty
+ * - by a quarter if the numbers correspond to the letter's position (e.g., A1b2)
+ * - by a quarter if both letters in the pairs are of the same case (e.g., A3B7)
  *
  * @example
- * // returns 'ac3'
- * removeInterleavingPairs('a1b2c3')
+ * // returns 'a1b2'
+ * removeInterleavingPairs('a1b2c3d4')
  *
- * // returns '1ec3'
- * removeInterleavingPairs('1eb6c3')
+ * // returns 'a1b5c3'
+ * removeInterleavingPairs('a1b5c3d8')
  */
 export function stripInterleavingPairs(str: string) {
-  const regex = /([a-z][0-9])([a-z][0-9])|([0-9][a-z])([0-9][a-z])/gi;
-  const sanitized = str.replace(regex, (match, $1, $2, $3, $4) => {
-    if ($1 && $2) {
-      const [char1, digit1, char2, digit2] = match;
-      const [charCode1, charCode2] = [
-        char1.toLowerCase().charCodeAt(0),
-        char2.toLowerCase().charCodeAt(0),
-      ];
+  return str.replace(/([a-z][0-9]){2}|([0-9][a-z]){2}/gi, (match) => {
+    const chars = match.match(/[a-z]/gi) ?? [];
+    const digits = match.match(/[0-9]/g) ?? [];
 
-      if (charCode1 - 96 === +digit1 || charCode2 - 96 === +digit2) {
-        return char1;
-      }
+    const digitsMatchLetterPositions = chars.every((char, i) => {
+      let charCode = char.toLowerCase().charCodeAt(0) - 96;
+      return charCode === +digits[i];
+    });
 
-      return `${char1}${digit1}`;
+    // in the worst case (e.g., a1b2) the pattern reduced to 1 character
+    // in the best case (e.g., A5b7) the pattern is reduced to 3 characters
+    let sanitizedLength = match.length * 0.75;
+    if (digitsMatchLetterPositions) {
+      sanitizedLength *= 0.75;
+    }
+    if (isLowerCase(chars?.join('')) || isUpperCase(chars.join(''))) {
+      sanitizedLength *= 0.75;
     }
 
-    if ($3 && $4) {
-      const [digit1, char1, digit2, char2] = match;
-      const [charCode1, charCode2] = [
-        char1.toLowerCase().charCodeAt(0),
-        char2.toLowerCase().charCodeAt(0),
-      ];
-
-      if (charCode1 - 96 === +digit1 || charCode2 - 96 === +digit2) {
-        return digit1;
-      }
-      return `${digit1}${char1}`;
-    }
-
-    return match;
+    return match.slice(0, sanitizedLength);
   });
-  return sanitized;
 }
 
 /**
- * Strips substrings of character sequences from the input string based on the given direction.
+ * Strips substrings of character sequences from the input based on the given direction.
 
- * Direction:
- * - `1` - Checks for ascending sequences (e.g. 'abc')
- * - `-1` - Checks for descending sequences (e.g. 'cba')
+ * The function identifies and removes sequences in either of two directions:
+ * 1. Forward sequential order (e.g., abc or 123) when direction is 1.
+ * 2. Reverse sequential order (e.g., cba or 321) when direction is -1.
  * 
- * A sequence is only considered if its length is 3 or more.
+ * Note: The function is case-insensitive, and only considers sequences of length 3 or more.
  *
  * @example
- * // returns ['abc']
- * getSequentialStrings('wxyzabc', 1)
+ * // returns 'wcba'
+ * stripSequentialStrings('wxyzcba', 1)
  *
- * // returns ['cba']
- * getSequentialStrings('wxyzcba', -1)
+ * // returns 'wxyzc'
+ * stripSequentialStrings('wxyzcba', -1)
  *
  */
 export function stripSequentialStrings(str: string, direction: 1 | -1) {
@@ -126,7 +119,7 @@ export function stripRepeatedStrings(str: string) {
   // Any repeated pattern can at most be half of the string's length
   // start by checking half the characters to see if they are repeated, and shrink the tested pattern
   for (let i = Math.floor(str.length / 2); i > 0; i--) {
-    const pattern = new RegExp(`(.{${i}})\\1+`, 'gi');
+    const pattern = new RegExp(`(.{${i}})\\1+`, 'g');
     str = str.replace(pattern, '$1');
   }
   return str;
@@ -148,4 +141,12 @@ export function regexp(str: string, flags?: string) {
     str = str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
   }
   return new RegExp(str, flags);
+}
+
+export function isUpperCase(str: string) {
+  return !!str.match(/^[A-Z]+$/);
+}
+
+export function isLowerCase(str: string) {
+  return !!str.match(/^[a-z]+$/);
 }

@@ -5,7 +5,7 @@
     "type": "Git",
     "url": "https://github.com/ghamadi/pass-profiler"
   },
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -20,7 +20,7 @@
     "format": "prettier --write 'src/**/*.ts'",
     "lint:ts": "tsc",
     "test": "jest",
-    "script": "tsup scripts/$SCRIPT.ts --out-dir scripts/out && clear && node scripts/out/$SCRIPT.cjs"
+    "script": "tsup scripts/$npm_config_name.ts --out-dir scripts/out --silent && node scripts/out/$npm_config_name.cjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.26.2",
