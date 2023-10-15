@@ -40,12 +40,11 @@ export default class PasswordProfiler {
     this.strengthRanges = this.setupStrengthRanges(options);
     this.rejectedPatterns = this.setupRejectedPatterns(options);
     this.sanitizersList = this.setupSanitizersList(options);
-    this.strict = options.strict ?? true;
+    this.strict = options.strict ?? false;
   }
 
   /**
-   * Returns a `PasswordProfile` instance for the parameter `password`
-   * based on the `ProfilerOptions`
+   * Returns a `PasswordProfile` instance for the parameter `password` based on the `ProfilerOptions`
    */
   parse(password: string) {
     return new PasswordProfile(password, {
@@ -70,15 +69,19 @@ export default class PasswordProfiler {
       'Initialize `rejectedPatterns` before calling `setupSanitizersList`.'
     );
 
-    const sanitizers = options.sanitizers ?? [
+    const sanitizersList: SanitizersList = permute(
+      options.sanitizers ?? [
+        (str) => stripRepeatedStrings(str),
+        (str) => stripSequentialStrings(str, 1),
+        (str) => stripSequentialStrings(str, -1),
+        (str) => stripInterleavingPairs(str),
+      ]
+    ).map((sanitizers) => [
       (str) => this.rejectedPatterns.reduce((out, pattern) => stripPattern(out, pattern), str),
-      (str) => stripRepeatedStrings(str),
-      (str) => stripSequentialStrings(str, 1),
-      (str) => stripSequentialStrings(str, -1),
-      (str) => stripInterleavingPairs(str),
-    ];
+      ...sanitizers,
+    ]);
 
-    return permute(sanitizers);
+    return sanitizersList;
   }
 
   private setupStrengthRanges(options: ProfilerOptions) {
