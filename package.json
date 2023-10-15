@@ -5,7 +5,7 @@
     "type": "Git",
     "url": "https://github.com/ghamadi/pass-profiler"
   },
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
