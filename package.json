@@ -18,7 +18,7 @@
   "scripts": {
     "build": "rm -rf out && tsup src/index.ts --format cjs,esm --dts",
     "format": "prettier --write 'src/**/*.ts'",
-    "lint:ts": "tsc",
+    "lint": "tsc",
     "test": "jest",
     "test:unit": "jest unit",
     "test:e2e": "jest e2e",
