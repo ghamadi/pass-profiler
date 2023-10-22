@@ -38,7 +38,7 @@ Entropy values are mapped to strength labels based on a predefined list. Users c
 
 ## Motivation
 
-To read more about the reasoning behing this approach to measure password strength, check out this [blog post](https://dev.to/ghamadi/rethinking-password-strength-estimation-beyond-composition-rules-408i).
+For an in-depth exploration of the rationale behind our unique approach to measuring password strength, we invite you to read our [blog post](https://dev.to/ghamadi/rethinking-password-strength-estimation-beyond-composition-rules-408i). The post discusses why we ventured beyond traditional composition rules in attempting to find a reliable password strength estimation method.
 
 ## Installation
 
