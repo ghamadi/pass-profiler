@@ -1,5 +1,11 @@
 # pass-profiler
 
+## 0.0.9
+
+### Patch Changes
+
+- 53f1ab7: Update README
+
 ## 0.0.8
 
 ### Patch Changes
