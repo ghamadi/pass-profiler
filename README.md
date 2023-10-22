@@ -36,6 +36,30 @@ Entropy is calculated based on the formula `E = log_2(N^L)` where:
 
 Entropy values are mapped to strength labels based on a predefined list. Users can override this list if needed.
 
+## Motivation
+
+To read more about the reasoning behing this approach to measure password strength, check out this [blog post](https://dev.to/ghamadi/rethinking-password-strength-estimation-beyond-composition-rules-408i).
+
+## Installation
+
+### NPM
+
+```bash
+npm install pass-profiler
+```
+
+### Yarn
+
+```bash
+yarn add pass-profiler
+```
+
+### PNPM
+
+```bash
+pnpm add pass-profiler
+```
+
 ## Usage
 
 ### Basic Usage
@@ -93,59 +117,3 @@ Custom sanitizer callbacks can replace the default steps by passing an array to 
 #### 4. `strict`
 
 By default, the **average entropy** of all sanitized passwords is used as the effective entropy. When `strict` is set to `true`, the profiler uses the **minimum entropy** value instead.
-
-## Motivation
-
-According to the [NIST guidelines](https://pages.nist.gov/800-63-3/sp800-63b.html#appA) on the strength of memorized secrets (i.e., user-generated passwords), length and complexity pivotal. However, while enforcing a minimum-length policy improves security, composition rules meant to enforce complexity can be counter productive.
-
-> _"...users respond in very predictable ways to the requirements imposed by composition rules..."_
-
-To ensure a password's security, a verifier must penalize predictability without becoming a source of predictability itself.
-
-### Why Composition Rules Don't Work
-
-Password verifiers relying on composition rules suffer from three main flaws:
-
-1. As the number of rules increases, The total number of possible passwords decreases
-2. Humans respond in predictable patterns to fulfill the rules
-3. Constraints can make the resulting password harder to remember
-
-Because password cracking is almost never a simple brute-force effort, these limitations can increase the vulnerability of a password by diminishing its unpredictability. Composition rules also mistakenly suggest that a password is strong if and only if it lacks any pattern, which is not necessarily true.
-
-For example, the password `Done_Wind_Brown1234_Pa$sword` is robust, due to its varied composition, unclear overall pattern, and 28-character length, _despite_ containing predictable components such as "1234" and "Pas$word".
-
-A verifier shouldn't reject such passwords using binary rules like "no sequential numbers". Instead, accounting for the presence of predictable patterns allows the verifier to strike a balance between imposing needless limitations and enabling weak passwords, disguised as strong, such as `aaaBBBcccDDDeee@@@123`.
-
-### Understanding Entropy
-
-Recall the entropy calculation formula is `E = log_2(N^L)`.
-
-Assuming all passwords are equally likely, there are `N^L` possible combinations. The base-2 logarithm tells us the bits required to represent a number in binary. Hence, `log_2(N^L)` tells us the number of bits needed to represent all possible passwords.
-
-This number is a direct measure of the unpredictability of a single, randomly chosen password. Each added bit doubles the number of possible representations, thus doubling the unpredictability.
-
-`X` bits of entropy, means `2^X` equally likely passwords. In other words, the higher the entropy, the more guesses a computer must make to crack the password. You have probably seen this relationship in the famous [comic by XKCD](https://xkcd.com/936/).
-
-<p align="center">
-  <img src="https://github.com/ghamadi/pass-profiler/assets/48609768/bd052faf-acff-4e49-913b-c6a7a37107d3">
-</p>
-
-### Why the Password Sanitization Step?
-
-Entropy computation assumes all characters within the pool have an equal chance of selection. However, when users create a password, this assumption is often false.
-
-Selecting a completely random password is challenging for us, and this affects the reliability of the entropy value. Consider the password: `1111111111111111111111`. Solely based on entropy, it would be deemed strong. Yet, it is highly predictable, and rule-based attacks would quickly crack passwords like this, which is why many systems impose composition rules.
-
-By stripping predictable patterns from passwords before computing entropy, we reintroduce a degree of randomness and enhance the reliability of the entropy value. Identifying and eliminating patterns and common keywords not only increases the randomness of the sanitized password but also negates the misleading effect of length introduced by these patterns.
-
-## Conclusion
-
-Blind reliance on entropy does not work with user-provided passwords. Likewise, enforcing boolean composition rules, like "must contain at least one number", is flawed. Additionally, the approach of computing a score by [adding and taking out points](https://www.uic.edu/apps/strong-password/) based on composition rules can also be misled by patterns designed to circumvent these rules.
-
-### Example:
-
-The password `aaBBcc123` has `53.59 bits` of theoretical entropy, and passes as a strong password on the meter implemented by UIC.
-
-If we strip this password down by first removing repetitions, we get `aBc123`. Then, when we further strip the password by removing sequences, we get `a1`; which cannot pass any meter.
-
-Whether the final computed entropy is indeed the password's real entropy matters less than the fact that the verifier is far more likely to be pessimistic than optimistic when it produces an inaccurate measurement.
