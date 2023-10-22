@@ -9,7 +9,7 @@
     "noImplicitReturns": true,
     "noEmit": true,
     "baseUrl": ".",
-    "lib": ["ES2020", "DOM"],
+    "lib": ["ES6", "DOM"],
     "paths": { "~/*": ["./src/*"] }
   }
 }
