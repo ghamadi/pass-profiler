@@ -1,9 +1,9 @@
-name: Publish
+name: Stage
 on:
   workflow_run:
-    workflows: [Stage]
+    workflows: [CI]
     types: [completed]
-    branches: [main]
+    branches: [develop]
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -20,13 +20,8 @@ jobs:
         with:
           node-version: 18.x
           cache: 'pnpm'
-
       - run: pnpm install --frozen-lockfile
-      - name: Create Release Pull Request or Publish
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: pnpm run release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Build and test
+        run: |
+          pnpm run build
+          pnpm run test:prod
