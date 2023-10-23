@@ -30,6 +30,18 @@ export function stripInterleavingPairs(str: string) {
       return charCode === +digits[i];
     });
 
+    const areCharsSequential =
+      chars.every((char, i) => {
+        let currCharCode = char.toLowerCase().charCodeAt(0);
+        let prevCharCode = chars[i - 1]?.toLocaleLowerCase().charCodeAt(0);
+        return !prevCharCode || currCharCode - prevCharCode === 1;
+      }) ||
+      chars.every((char, i) => {
+        let currCharCode = char.toLowerCase().charCodeAt(0);
+        let prevCharCode = chars[i - 1]?.toLocaleLowerCase().charCodeAt(0);
+        return !prevCharCode || currCharCode - prevCharCode === -1;
+      });
+
     // in the worst case (e.g., a1b2) the pattern reduced to 1 character
     // in the best case (e.g., A5b7) the pattern is reduced to 3 characters
     let sanitizedLength = match.length * 0.75;
@@ -37,6 +49,9 @@ export function stripInterleavingPairs(str: string) {
       sanitizedLength *= 0.75;
     }
     if (similarCaseRegex.test(chars.join(''))) {
+      sanitizedLength *= 0.75;
+    }
+    if (areCharsSequential) {
       sanitizedLength *= 0.75;
     }
 
