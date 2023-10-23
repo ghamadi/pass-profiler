@@ -16,6 +16,7 @@ jobs:
         with:
           node-version: 18.x
           cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - name: Build and test
         run: |
           pnpm run lint
