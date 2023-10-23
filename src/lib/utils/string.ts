@@ -18,7 +18,10 @@
  * removeInterleavingPairs('a1b5c3d8')
  */
 export function stripInterleavingPairs(str: string) {
-  return str.replace(/([a-z][0-9]){2}|([0-9][a-z]){2}/gi, (match) => {
+  const interleavingPairsRegex = /([a-z][0-9]){2}|([0-9][a-z]){2}/gi;
+  const similarCaseRegex = /(^[a-z]+$)|(^[A-Z]+$)/;
+
+  return str.replace(interleavingPairsRegex, (match) => {
     const chars = match.match(/[a-z]/gi) ?? [];
     const digits = match.match(/[0-9]/g) ?? [];
 
@@ -33,7 +36,7 @@ export function stripInterleavingPairs(str: string) {
     if (digitsMatchLetterPositions) {
       sanitizedLength *= 0.75;
     }
-    if (isLowerCase(chars?.join('')) || isUpperCase(chars.join(''))) {
+    if (similarCaseRegex.test(chars.join(''))) {
       sanitizedLength *= 0.75;
     }
 
@@ -132,12 +135,4 @@ export function regexp(str: string, flags?: string) {
     str = str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
   }
   return new RegExp(str, flags);
-}
-
-export function isUpperCase(str: string) {
-  return !!str.match(/^[A-Z]+$/);
-}
-
-export function isLowerCase(str: string) {
-  return !!str.match(/^[a-z]+$/);
 }
