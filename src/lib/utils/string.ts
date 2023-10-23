@@ -65,15 +65,13 @@ export function stripSequentialStrings(str: string, direction: 1 | -1) {
     return letter2.charCodeAt(0) - letter1.charCodeAt(0) === direction;
   };
 
-  // Extract the list sequences to be removed
-  const chars = str.split('');
-  const sequences: Set<string> = new Set([]);
-  for (let i = 0; i < chars.length - 1; ) {
-    let current = chars[i];
-    let next = chars[i + 1];
+  let output = '';
+  for (let i = 0; i < str.length - 1; i++) {
+    let current = str[i];
+    let next = str[i + 1];
 
     if (!isPairSequential(current, next, direction)) {
-      i++;
+      output += current;
       continue;
     }
 
@@ -83,22 +81,15 @@ export function stripSequentialStrings(str: string, direction: 1 | -1) {
     do {
       sequence.push(next);
       current = next;
-      next = chars[++i + 1];
+      next = str[++i + 1];
     } while (!!next && isPairSequential(current, next, direction));
 
     if (sequence.length >= 3) {
-      sequences.add(sequence.join(''));
+      output += sequence.slice(0, sequence.length / 2).join('');
+    } else {
+      output += sequence.join('');
     }
   }
-
-  // Prepare the output by replacing all sequences with their first element only
-  let output = str;
-  // sort from longest to shortest to handle edge cases such as `_123_123456`
-  [...sequences]
-    .sort((s1, s2) => s2.length - s1.length)
-    .forEach((sequence) => {
-      output = output.replace(regexp(sequence, 'gi'), sequence[0]);
-    });
 
   return output;
 }
