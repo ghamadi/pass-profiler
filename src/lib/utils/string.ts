@@ -78,17 +78,17 @@ export function stripInterleavingPairs(str: string) {
  */
 export function stripSequentialStrings(str: string, direction: 1 | -1) {
   const isPairSequential = (letter1: string, letter2: string, direction: 1 | -1) => {
-    letter1 = letter1.toLocaleLowerCase();
-    letter2 = letter2.toLocaleLowerCase();
-    return letter2.charCodeAt(0) - letter1.charCodeAt(0) === direction;
+    const charCode1 = letter1.toLocaleLowerCase().charCodeAt(0);
+    const charCode2 = letter2.toLocaleLowerCase().charCodeAt(0);
+    return charCode2 - charCode1 === direction;
   };
 
   let output = '';
-  for (let i = 0; i < str.length - 1; i++) {
+  for (let i = 0; i < str.length; i++) {
     let current = str[i];
     let next = str[i + 1];
 
-    if (!isPairSequential(current, next, direction)) {
+    if (!next || !isPairSequential(current, next, direction)) {
       output += current;
       continue;
     }
@@ -103,7 +103,7 @@ export function stripSequentialStrings(str: string, direction: 1 | -1) {
     } while (!!next && isPairSequential(current, next, direction));
 
     if (sequence.length >= 3) {
-      output += sequence.slice(0, sequence.length / 2).join('');
+      output += sequence.slice(0, 1).join('');
     } else {
       output += sequence.join('');
     }
