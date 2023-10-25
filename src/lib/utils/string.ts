@@ -2,13 +2,16 @@
  * Strips interleaving pairs of alphabets and digits from the input string.
  *
  * The function looks for sequences in a string that follow one of two patterns:
- * 1. Letter followed by a number, repeated at least twice (e.g., a1b2c3...).
- * 2. Number followed by a letter, repeated at least twice (e.g., 1a2b3c...).
+ * 1. Letter followed by a number, repeated at least twice (e.g., a1b2...).
+ * 2. Number followed by a letter, repeated at least twice (e.g., 1a2b...).
  *
  * Matching strings are reduced in length over three steps:
  * - by a quarter as an initial penalty
- * - by a quarter if the numbers correspond to the letter's position (e.g., A1b2)
- * - by a quarter if both letters in the pairs are of the same case (e.g., A3B7)
+ * - by a quarter if the numbers correspond to the letter's position (e.g., A1c3)
+ * - by a quarter if both letters in the pairs are of the same case (e.g., A3C7)
+ * - by a quarter if the letters are sequential (e.g. a2B4)
+ *
+ *
  *
  * @example
  * // returns 'a1b2'
@@ -18,7 +21,7 @@
  * removeInterleavingPairs('a1b5c3d8')
  */
 export function stripInterleavingPairs(str: string) {
-  const interleavingPairsRegex = /([a-z][0-9]){2}|([0-9][a-z]){2}/gi;
+  const interleavingPairsRegex = /([a-z][0-9]){2,}|([0-9][a-z]){2,}/gi;
   const similarCaseRegex = /(^[a-z]+$)|(^[A-Z]+$)/;
 
   return str.replace(interleavingPairsRegex, (match) => {
@@ -29,6 +32,8 @@ export function stripInterleavingPairs(str: string) {
       let charCode = char.toLowerCase().charCodeAt(0) - 96;
       return charCode === +digits[i];
     });
+
+    const areCharsOfSameCase = similarCaseRegex.test(chars.join(''));
 
     const areCharsSequential =
       chars.every((char, i) => {
@@ -42,19 +47,14 @@ export function stripInterleavingPairs(str: string) {
         return !prevCharCode || currCharCode - prevCharCode === -1;
       });
 
-    // in the worst case (e.g., a1b2) the pattern reduced to 1 character
-    // in the best case (e.g., A5b7) the pattern is reduced to 3 characters
-    let sanitizedLength = match.length * 0.75;
-    if (digitsMatchLetterPositions) {
-      sanitizedLength *= 0.75;
-    }
-    if (similarCaseRegex.test(chars.join(''))) {
-      sanitizedLength *= 0.75;
-    }
-    if (areCharsSequential) {
-      sanitizedLength *= 0.75;
-    }
+    // in the worst case (e.g., a1b2) a pair is reduced to 1 character
+    // in the best case (e.g., A5b7) a pair is reduced to 3 characters
+    const penalty = [digitsMatchLetterPositions, areCharsOfSameCase, areCharsSequential].reduce(
+      (penalty, booleanValue) => (booleanValue ? penalty + 0.25 : penalty),
+      0.25
+    );
 
+    const sanitizedLength = Math.max(1, match.length * (1 - penalty));
     return match.slice(0, sanitizedLength);
   });
 }
@@ -103,6 +103,7 @@ export function stripSequentialStrings(str: string, direction: 1 | -1) {
     } while (!!next && isPairSequential(current, next, direction));
 
     if (sequence.length >= 3) {
+      // TODO: Experiment with slicing the sequence to half its length
       output += sequence.slice(0, 1).join('');
     } else {
       output += sequence.join('');
