@@ -10,15 +10,6 @@
  * - by a quarter if the numbers correspond to the letter's position (e.g., A1c3)
  * - by a quarter if both letters in the pairs are of the same case (e.g., A3C7)
  * - by a quarter if the letters are sequential (e.g. a2B4)
- *
- *
- *
- * @example
- * // returns 'a1b2'
- * removeInterleavingPairs('a1b2c3d4')
- *
- * // returns 'a1b5c3'
- * removeInterleavingPairs('a1b5c3d8')
  */
 export function stripInterleavingPairs(str: string) {
   const interleavingPairsRegex = /([a-z][0-9]){2,}|([0-9][a-z]){2,}/gi;
@@ -67,14 +58,6 @@ export function stripInterleavingPairs(str: string) {
  * 2. Reverse sequential order (e.g., cba or 321) when direction is -1.
  * 
  * Note: The function is case-insensitive, and only considers sequences of length 3 or more.
- *
- * @example
- * // returns 'wcba'
- * stripSequentialStrings('wxyzcba', 1)
- *
- * // returns 'wxyzc'
- * stripSequentialStrings('wxyzcba', -1)
- *
  */
 export function stripSequentialStrings(str: string, direction: 1 | -1) {
   const isPairSequential = (letter1: string, letter2: string, direction: 1 | -1) => {
@@ -116,14 +99,6 @@ export function stripSequentialStrings(str: string, direction: 1 | -1) {
 /**
  * Strips repeated sequences of characters in a string.
  * When a repeated sequence is found, it's replaced by a single instance of that sequence.
- *
- * @example
- * // returns 'abca'
- * stripRepeatedStrings('aaabcaaa')
- *
- * @example
- * // returns "JavaScriptJavaScriptJavaScript"
- * stripReatedStrings("JavaScript");
  */
 export function stripRepeatedStrings(str: string) {
   // Any repeated pattern can at most be half of the string's length
