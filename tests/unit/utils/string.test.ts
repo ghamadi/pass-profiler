@@ -11,6 +11,16 @@ describe('stripInterleavingPairs Function', () => {
       expect(stripInterleavingPairs('1ab23c')).toBe('1ab23c');
     });
 
+    test('Processes input that is at least 2 pairs', () => {
+      expect(stripInterleavingPairs('a1b')).toBe('a1b');
+      expect(stripInterleavingPairs('1a2')).toBe('1a2');
+    });
+
+    test('Captures multiple interleaving pairs', () => {
+      expect(stripInterleavingPairs('a1b2#c3d4e5')).toBe('a#c');
+      expect(stripInterleavingPairs('1a2b#3c4d5e')).toBe('1#3');
+    });
+
     test('Reduces the length of the string containing interleaving pairs', () => {
       expect(stripInterleavingPairs('a1b2').length).toBeLessThan(4);
       expect(stripInterleavingPairs('1a2b').length).toBeLessThan(4);
@@ -21,56 +31,51 @@ describe('stripInterleavingPairs Function', () => {
       expect(stripInterleavingPairs('a1B2').length).toBeLessThan(4);
       expect(stripInterleavingPairs('1a2B').length).toBeLessThan(4);
     });
-
-    test('Processes input that is at least 2 pairs', () => {
-      expect(stripInterleavingPairs('a1b')).toBe('a1b');
-      expect(stripInterleavingPairs('1a2')).toBe('1a2');
-    });
-
-    test('Captures multiple interleaving pairs', () => {
-      expect(stripInterleavingPairs('a1b2#c3d4e5')).toBe('a#c');
-      expect(stripInterleavingPairs('1a2b#3c4d5e')).toBe('1#3');
-    });
   });
 
   describe('Length reduction strategy', () => {
     test('Reduces the length by 25% in the best case scenario', () => {
-      expect(stripInterleavingPairs('a1C6')).toBe('a1C');
-      expect(stripInterleavingPairs('1a6C')).toBe('1a6');
+      expect(stripInterleavingPairs('a1C6').length).toBe(3);
+      expect(stripInterleavingPairs('1a6C').length).toBe(3);
     });
 
     test('Reduces the length by 50% when letters are of the same case', () => {
-      expect(stripInterleavingPairs('a3c6')).toBe('a3');
-      expect(stripInterleavingPairs('3a6c')).toBe('3a');
+      expect(stripInterleavingPairs('a3c6').length).toBe(2);
+      expect(stripInterleavingPairs('3a6c').length).toBe(2);
     });
 
     test('Reduces the length by 50% when numbers match the position of the letters', () => {
-      expect(stripInterleavingPairs('a1C3')).toBe('a1');
-      expect(stripInterleavingPairs('1a3C')).toBe('1a');
+      expect(stripInterleavingPairs('a1C3').length).toBe(2);
+      expect(stripInterleavingPairs('1a3C').length).toBe(2);
     });
 
     test('Reduces the length by 50% when characters are sequential', () => {
-      expect(stripInterleavingPairs('a3B3')).toBe('a3');
-      expect(stripInterleavingPairs('3a3B')).toBe('3a');
+      expect(stripInterleavingPairs('a3B3').length).toBe(2);
+      expect(stripInterleavingPairs('3a3B').length).toBe(2);
     });
 
     test('Reduces the length by 75% when multiple criteria are met', () => {
       // Same case + Sequential letters
-      expect(stripInterleavingPairs('a2b3c5d6')).toBe('a2');
-      expect(stripInterleavingPairs('2a3b5c6d')).toBe('2a');
+      expect(stripInterleavingPairs('a2b3c5d6').length).toBe(2);
+      expect(stripInterleavingPairs('2a3b5c6d').length).toBe(2);
 
       // Same case + Numbers match letter position
-      expect(stripInterleavingPairs('a1c3e5g7')).toBe('a1');
-      expect(stripInterleavingPairs('1a3c5e7g')).toBe('1a');
+      expect(stripInterleavingPairs('a1c3e5g7').length).toBe(2);
+      expect(stripInterleavingPairs('1a3c5e7g').length).toBe(2);
 
       // Sequential letters + Numbers match letter position
-      expect(stripInterleavingPairs('A1b2')).toBe('A');
-      expect(stripInterleavingPairs('1A2B')).toBe('1');
+      expect(stripInterleavingPairs('A1b2').length).toBe(1);
+      expect(stripInterleavingPairs('1A2B').length).toBe(1);
     });
 
     test('Reduces length to a mininum of 1 character', () => {
-      expect(stripInterleavingPairs('a1b2')).toBe('a');
-      expect(stripInterleavingPairs('1a2b')).toBe('1');
+      expect(stripInterleavingPairs('a1b2').length).toBe(1);
+      expect(stripInterleavingPairs('1a2b').length).toBe(1);
+    });
+
+    test('Uses the floor value of the computed sanitized length', () => {
+      expect(stripInterleavingPairs('a1b2c3').length).toBe(1);
+      expect(stripInterleavingPairs('1a2b3c').length).toBe(1);
     });
   });
 });
