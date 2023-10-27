@@ -5,12 +5,27 @@ describe('stripInterleavingPairs Function', () => {
     test('Returns a string with no modifications when there are no interleaving pairs', () => {
       expect(stripInterleavingPairs('')).toBe('');
       expect(stripInterleavingPairs('abc')).toBe('abc');
-      expect(stripInterleavingPairs('ab1c')).toBe('ab1c');
-      expect(stripInterleavingPairs('ab1cd2')).toBe('ab1cd2');
-      expect(stripInterleavingPairs('1ab23c')).toBe('1ab23c');
+      expect(stripInterleavingPairs('123')).toBe('123');
     });
 
-    test('Processes input that is at least 2 pairs', () => {
+    test('Catches interleaving pairs starting with letters', () => {
+      expect(stripInterleavingPairs('a1b2')).toBe('a');
+    });
+
+    test('Catches interleaving pairs starting with digits', () => {
+      expect(stripInterleavingPairs('1a2b')).toBe('1');
+    });
+
+    test('Ignores special characters', () => {
+      expect(stripInterleavingPairs('1#2#')).toBe('1#2#');
+    });
+
+    test('Ignores substrings with no interleaving pairs', () => {
+      expect(stripInterleavingPairs('ab#a1b2')).toBe('ab#a');
+      expect(stripInterleavingPairs('ab#1a2b')).toBe('ab#1');
+    });
+
+    test('Ignores interleaving patterns shorter than 2 pairs', () => {
       expect(stripInterleavingPairs('a1b')).toBe('a1b');
       expect(stripInterleavingPairs('1a2')).toBe('1a2');
     });
@@ -25,7 +40,7 @@ describe('stripInterleavingPairs Function', () => {
       expect(stripInterleavingPairs('1A2b').length).toBe(1);
     });
 
-    test('Captures all interleaving pairs', () => {
+    test('Catches all interleaving pairs', () => {
       expect(stripInterleavingPairs('a1b2#c3d4e5')).toBe('a#c');
       expect(stripInterleavingPairs('1a2b#3c4d5e')).toBe('1#3');
     });
