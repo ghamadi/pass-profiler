@@ -1,4 +1,4 @@
-import { stripInterleavingPairs } from '~/lib/utils/string';
+import { stripInterleavingPairs, stripSequentialStrings } from '~/lib/utils/string';
 
 describe('stripInterleavingPairs Function', () => {
   describe('General functionality', () => {
@@ -32,7 +32,7 @@ describe('stripInterleavingPairs Function', () => {
 
     test('Reduces length of any string containing interleaving pairs', () => {
       expect(stripInterleavingPairs('a1b2').length).toBeLessThan(4);
-      expect(stripInterleavingPairs('1a2b').length).toBeLessThan(4);
+      expect(stripInterleavingPairs('abc1a2b').length).toBeLessThan(7);
     });
 
     test('Checking letter positions & sequence is case insensitive', () => {
@@ -90,6 +90,84 @@ describe('stripInterleavingPairs Function', () => {
     test('Uses the floor value of the computed sanitized length', () => {
       expect(stripInterleavingPairs('a1b2c3').length).toBe(1);
       expect(stripInterleavingPairs('1a2b3c').length).toBe(1);
+    });
+  });
+});
+
+describe('stripSequentialStrings Function', () => {
+  describe('Matching ascending sequences', () => {
+    test('Returns an unmodified string when there are no sequential characters', () => {
+      expect(stripSequentialStrings('367', 1)).toBe('367');
+      expect(stripSequentialStrings('gyh', 1)).toBe('gyh');
+      expect(stripSequentialStrings('', 1)).toBe('');
+    });
+
+    test('Strips a sequential string of letters to one', () => {
+      expect(stripSequentialStrings('abcd', 1)).toBe('a');
+    });
+
+    test('Strips a sequential string of numbers to one', () => {
+      expect(stripSequentialStrings('1234', 1)).toBe('1');
+    });
+
+    test('Strips a sequential string of special characters to one (using ASCII code)', () => {
+      expect(stripSequentialStrings('#$%', 1)).toBe('#');
+    });
+
+    test('Catches all sequential substrings', () => {
+      expect(stripSequentialStrings('abcdxyza', 1)).toBe('axa');
+    });
+
+    test('Catches sequences in the middle of the string', () => {
+      expect(stripSequentialStrings('ffabcdff', 1)).toBe('ffaff');
+    });
+
+    test('Requires at least three characters to modify sequence', () => {
+      expect(stripSequentialStrings('ab12', 1)).toBe('ab12');
+    });
+
+    test('Sequence matching is case insnsitive', () => {
+      expect(stripSequentialStrings('aBcDeF', 1)).toBe('a');
+    });
+  });
+
+  describe('Matching descending sequences', () => {
+    test('Returns an unmodified string when there are no sequential characters', () => {
+      expect(stripSequentialStrings('367', -1)).toBe('367');
+      expect(stripSequentialStrings('gyh', -1)).toBe('gyh');
+      expect(stripSequentialStrings('', -1)).toBe('');
+    });
+
+    test('Strips a sequential string of letters to one', () => {
+      expect(stripSequentialStrings('dcba', -1)).toBe('d');
+    });
+
+    test('Strips a sequential string of numbers to one', () => {
+      expect(stripSequentialStrings('4321', -1)).toBe('4');
+    });
+
+    test('Strips a sequential string of special characters to one (using ASCII code)', () => {
+      expect(stripSequentialStrings('%$#', -1)).toBe('%');
+    });
+
+    test('Catches all sequential substrings', () => {
+      expect(stripSequentialStrings('azyxdcba', -1)).toBe('azd');
+    });
+
+    test('Catches sequences in the middle of the string', () => {
+      expect(stripSequentialStrings('ffdcbaff', -1)).toBe('ffdff');
+    });
+
+    test('Requires at least three characters to modify sequence', () => {
+      expect(stripSequentialStrings('ab12', -1)).toBe('ab12');
+    });
+
+    test('Sequence matching is case insnsitive', () => {
+      expect(stripSequentialStrings('FeDcBa', -1)).toBe('F');
+    });
+
+    test('Handles sequences in the middle of the string', () => {
+      expect(stripSequentialStrings('ffabcdff', 1)).toBe('ffaff');
     });
   });
 });

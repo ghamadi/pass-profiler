@@ -86,8 +86,7 @@ export function stripSequentialStrings(str: string, direction: 1 | -1) {
     } while (!!next && isPairSequential(current, next, direction));
 
     if (sequence.length >= 3) {
-      // TODO: Experiment with slicing the sequence to half its length
-      output += sequence.slice(0, 1).join('');
+      output += sequence[0];
     } else {
       output += sequence.join('');
     }
