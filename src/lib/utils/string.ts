@@ -100,10 +100,11 @@ export function stripSequentialStrings(str: string, direction: 1 | -1) {
  * When a repeated sequence is found, it's replaced by a single instance of that sequence.
  */
 export function stripRepeatedStrings(str: string) {
-  // Any repeated pattern can at most be half of the string's length
-  // start by checking half the characters to see if they are repeated, and shrink the tested pattern
-  for (let i = Math.floor(str.length / 2); i > 0; i--) {
-    const pattern = new RegExp(`(.{${i}})\\1+`, 'g');
+  // Any pattern repeated across the string can at most be half of the string's length
+  // Repeatedly shrink the string by looking for increasingly longer patterns
+  let l = 0;
+  while (++l <= Math.floor(str.length / 2)) {
+    const pattern = new RegExp(`(.{${l}})\\1+`, 'g');
     str = str.replace(pattern, '$1');
   }
   return str;

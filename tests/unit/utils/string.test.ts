@@ -1,4 +1,8 @@
-import { stripInterleavingPairs, stripSequentialStrings } from '~/lib/utils/string';
+import {
+  stripInterleavingPairs,
+  stripSequentialStrings,
+  stripRepeatedStrings,
+} from '~/lib/utils/string';
 
 describe('stripInterleavingPairs Function', () => {
   describe('General functionality', () => {
@@ -169,5 +173,53 @@ describe('stripSequentialStrings Function', () => {
     test('Handles sequences in the middle of the string', () => {
       expect(stripSequentialStrings('ffabcdff', 1)).toBe('ffaff');
     });
+  });
+});
+
+describe('stripRepeatedStrings Function', () => {
+  test('Returns an unmodified string when there are no repeated sequences', () => {
+    expect(stripRepeatedStrings('abcdefg')).toBe('abcdefg');
+    expect(stripRepeatedStrings('123456')).toBe('123456');
+    expect(stripRepeatedStrings('')).toBe('');
+  });
+
+  test('Strips repeated characters, replacing them with a single instance', () => {
+    expect(stripRepeatedStrings('aaaaaaaaa')).toBe('a');
+    expect(stripRepeatedStrings('111111111')).toBe('1');
+    expect(stripRepeatedStrings('#########')).toBe('#');
+  });
+
+  test('Pattern matching is case sensitive', () => {
+    expect(stripRepeatedStrings('aAa')).toBe('aAa');
+  });
+
+  test('Handles any repeated pattern', () => {
+    expect(stripRepeatedStrings('JavascriptJavascript')).toBe('Javascript');
+  });
+
+  test('Catches all instances of repeated patterns', () => {
+    expect(stripRepeatedStrings('aaa1BBB2ccc3')).toBe('a1B2c3');
+  });
+
+  test('Repeatedly removes repeated patterns until no patterns remain', () => {
+    // xxxyyyxxxyyy => xyxy => xy
+    expect(stripRepeatedStrings('xxxyyyxxxyyy')).toBe('xy');
+    // ababababa => aba
+    expect(stripRepeatedStrings('ababababa')).toBe('aba');
+  });
+
+  test('Matches the leftmost pattern with multiple equal-length patterns', () => {});
+
+  test('Retains unique sequences in the presence of repeated sequences', () => {
+    expect(stripRepeatedStrings('abcdabcdabef')).toBe('abcdabef');
+  });
+
+  test('Handles strings with whitespace characters', () => {
+    expect(stripRepeatedStrings('ab  cd  ')).toBe('ab cd ');
+  });
+
+  test('Works with special characters and non-alphanumeric sequences', () => {
+    expect(stripRepeatedStrings('**--==')).toBe('*-=');
+    expect(stripRepeatedStrings('..,,;;')).toBe('.,;');
   });
 });
