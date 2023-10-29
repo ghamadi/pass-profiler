@@ -2,6 +2,7 @@ import {
   stripInterleavingPairs,
   stripSequentialStrings,
   stripRepeatedStrings,
+  stripPattern,
 } from '~/lib/utils/string';
 
 describe('stripInterleavingPairs Function', () => {
@@ -186,7 +187,6 @@ describe('stripRepeatedStrings Function', () => {
   test('Strips repeated characters, replacing them with a single instance', () => {
     expect(stripRepeatedStrings('aaaaaaaaa')).toBe('a');
     expect(stripRepeatedStrings('111111111')).toBe('1');
-    expect(stripRepeatedStrings('#########')).toBe('#');
   });
 
   test('Pattern matching is case sensitive', () => {
@@ -216,10 +216,77 @@ describe('stripRepeatedStrings Function', () => {
 
   test('Handles strings with whitespace characters', () => {
     expect(stripRepeatedStrings('ab  cd  ')).toBe('ab cd ');
+    expect(stripRepeatedStrings('ab\n\ncd')).toBe('ab\ncd');
   });
 
   test('Works with special characters and non-alphanumeric sequences', () => {
     expect(stripRepeatedStrings('**--==')).toBe('*-=');
     expect(stripRepeatedStrings('..,,;;')).toBe('.,;');
+    expect(stripRepeatedStrings('#########')).toBe('#');
+  });
+});
+
+describe('stripPattern Function', () => {
+  describe('Handling string patterns', () => {
+    test('Returns string without modification when pattern is not found', () => {
+      expect(stripPattern('hello universe', 'hello world')).toBe('hello universe');
+    });
+
+    test('Returns input without modification when pattern is an empty string', () => {
+      expect(stripPattern('', '')).toBe('');
+      expect(stripPattern('hello world', '')).toBe('hello world');
+    });
+
+    test('Handles empty string input', () => {
+      expect(stripPattern('', 'hello')).toBe('');
+    });
+
+    test('Handles whitespace pattern', () => {
+      expect(stripPattern('hello  world', '  ')).toBe('hello world');
+    });
+
+    test('Reduces matched patterns to their first characters', () => {
+      expect(stripPattern('hello world', 'hello')).toBe('h world');
+    });
+
+    test('Matching simple strings is case insensitive', () => {
+      expect(stripPattern('Hello world', 'hello')).toBe('H world');
+    });
+
+    test('Removes all instances of the provided string', () => {
+      expect(stripPattern('Hello world, hello universe', 'hello')).toBe('H world, h universe');
+    });
+  });
+
+  describe('Handling regex patterns', () => {
+    test('Returns string without modification when pattern is not found', () => {
+      expect(stripPattern('hello universe', '/hello world/i')).toBe('hello universe');
+    });
+
+    test('Returns input without modification when pattern is an empty string', () => {
+      expect(stripPattern('', '/^$/')).toBe('');
+      expect(stripPattern('hello world', '/^$/')).toBe('hello world');
+    });
+
+    test('Handles empty string input', () => {
+      expect(stripPattern('', '/hello/i')).toBe('');
+    });
+
+    test('Handles whitespace pattern', () => {
+      expect(stripPattern('hello  world', '/\\s{2,}/')).toBe('hello world');
+    });
+
+    test('Reduces matched patterns to their first character', () => {
+      expect(stripPattern('hello world', '/HELLO/i')).toBe('h world');
+    });
+
+    test('Throws when regex is invalid', () => {
+      // this pattern is needed to make sure jest is ready to catch the error when testing
+      expect(() => stripPattern('hello world', '/HELLO(/i')).toThrow();
+    });
+
+    test('Removes all instances of the provided string', () => {
+      expect(stripPattern('Hello world, hello universe', 'hello')).toBe('H world, h universe');
+    });
   });
 });

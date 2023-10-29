@@ -96,34 +96,38 @@ export function stripSequentialStrings(str: string, direction: 1 | -1) {
 }
 
 /**
- * Strips repeated sequences of characters in a string.
- * When a repeated sequence is found, it's replaced by a single instance of that sequence.
+ * Repeatedly shrinks the string by looking for increasingly longer recurring patterns
  */
 export function stripRepeatedStrings(str: string) {
   // Any pattern repeated across the string can at most be half of the string's length
-  // Repeatedly shrink the string by looking for increasingly longer patterns
   let l = 0;
   while (++l <= Math.floor(str.length / 2)) {
-    const pattern = new RegExp(`(.{${l}})\\1+`, 'g');
+    const pattern = new RegExp(`(.{${l}})\\1+`, 'gs');
     str = str.replace(pattern, '$1');
   }
   return str;
 }
 
+/**
+ * Removes all matches
+ */
 export function stripPattern(str: string, pattern: string) {
-  return str.replace(regexp(pattern, 'gi'), pattern[0]);
+  if (!pattern) {
+    return str;
+  }
+  return str.replace(toRegexp(pattern), ($1) => $1[0] ?? '');
 }
 
-/**
- * Escapes special characters in a string and returns a regular expression.
- *
- * If the passed string is wrapped in slashes (e.g. `/[a-z]/`) then it is not escaped
- */
-export function regexp(str: string, flags?: string) {
-  if (str.startsWith('/') && str.endsWith('/')) {
-    str = str.slice(1, -1);
-  } else {
-    str = str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+export function toRegexp(input: string) {
+  // Check if the input is in regex form
+  const parts = input.match(/^\/(.*)\/([gimsuy]*)$/);
+  if (parts) {
+    let body = parts[1];
+    let flags = parts[2] + (parts[2].includes('g') ? '' : 'g');
+    return new RegExp(body, flags);
   }
-  return new RegExp(str, flags);
+
+  // if parts is null, escape the special characters and build a regex from the string
+  const escapedString = input.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(escapedString, 'gi');
 }
