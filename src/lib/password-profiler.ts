@@ -7,6 +7,7 @@ import {
   stripPattern,
   stripRepeatedStrings,
   stripSequentialStrings,
+  toRegex,
 } from '~/lib/utils/string';
 import { permute } from '~/lib/utils/array';
 import InvalidRangeError from '~/lib/errors/invalid-range';
@@ -77,7 +78,11 @@ export default class PasswordProfiler {
         (str) => stripInterleavingPairs(str),
       ]
     ).map((sanitizers) => [
-      (str) => this.rejectedPatterns.reduce((out, pattern) => stripPattern(out, pattern), str),
+      (str) =>
+        this.rejectedPatterns.reduce(
+          (out, pattern) => stripPattern(out, toRegex(pattern, 'gi')),
+          str
+        ),
       ...sanitizers,
     ]);
 

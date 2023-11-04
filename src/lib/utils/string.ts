@@ -109,25 +109,47 @@ export function stripRepeatedStrings(str: string) {
 }
 
 /**
- * Removes all matches
+ * Removes all matches of a given pattern
+ *
+ * The string pattern can be in the form of a plain string or a regular expressiion (e.g., "/[a-z]/i").
+ * If a plain string is provided, the matching to strip the pattern is
  */
-export function stripPattern(str: string, pattern: string) {
+export function stripPattern(str: string, pattern: RegExp) {
   if (!pattern) {
     return str;
   }
-  return str.replace(toRegexp(pattern), ($1) => $1[0] ?? '');
+  return str.replace(pattern, ($1) => $1[0] ?? '');
 }
 
-export function toRegexp(input: string) {
+/**
+ * Internal helper function to convert a string to a valid Regular Expression
+ */
+export function toRegex(input: string, flagsParam = '') {
+  const sanitizeFlags = (flags: string) => {
+    return [...new Set(flags.split(''))].filter((flag) => /^[gimsuy]$/.test(flag)).join('');
+  };
+
   // Check if the input is in regex form
   const parts = input.match(/^\/(.*)\/([gimsuy]*)$/);
   if (parts) {
-    let body = parts[1];
-    let flags = parts[2] + (parts[2].includes('g') ? '' : 'g');
-    return new RegExp(body, flags);
+    let [, body, flags] = parts;
+    return new RegExp(body, sanitizeFlags(flags + flagsParam));
   }
 
   // if parts is null, escape the special characters and build a regex from the string
-  const escapedString = input.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(escapedString, 'gi');
+  const escapedString = input ? input.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&') : '^$';
+  return new RegExp(escapedString, sanitizeFlags(flagsParam));
 }
+
+/**
+TODO: 
+ * Rename `toRegexp` to `toRegex`
+
+ * `stripPattern` should accept a regular expression only
+
+ * Move the `handling string patterns` unit test group to the `toRegex Function` group
+ 
+ * Add a `flags: string` parameter to `toRegex` so that users can pass a regular string and the flags
+
+ * Call the `toRegex` function from the profiler in order to pass its output to `stripPattern`
+ */
