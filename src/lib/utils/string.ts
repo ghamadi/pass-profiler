@@ -140,16 +140,3 @@ export function toRegex(input: string, flagsParam = '') {
   const escapedString = input ? input.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&') : '^$';
   return new RegExp(escapedString, sanitizeFlags(flagsParam));
 }
-
-/**
-TODO: 
- * Rename `toRegexp` to `toRegex`
-
- * `stripPattern` should accept a regular expression only
-
- * Move the `handling string patterns` unit test group to the `toRegex Function` group
- 
- * Add a `flags: string` parameter to `toRegex` so that users can pass a regular string and the flags
-
- * Call the `toRegex` function from the profiler in order to pass its output to `stripPattern`
- */
