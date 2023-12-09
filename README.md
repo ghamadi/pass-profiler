@@ -19,7 +19,7 @@ The password is sanitized by removing predictable patterns. This step allows the
 
 The `PasswordProfiler` first removes rejected patterns and then runs 4 sanitizing steps by default:
 
-1. Strip down substring that are consequtively repeated (e.g., `aaabbb` => `ab`)
+1. Strip down substring that are consecutively repeated (e.g., `aaabbb` => `ab`)
 2. Strip down characters that are ascendingly sequential
 3. Strip down characters that are descendingly sequential
 4. Strip down pairs of interleaving letters & numbers (e.g., `A1b1` => `A1`)

@@ -1,14 +1,18 @@
-name: CI
+name: Stage
 on:
-  push:
-    branches:
-      - '**'
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [development]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
-  build:
+  test-prod:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2
         with:
           version: 8.8
@@ -19,6 +23,5 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Build and test
         run: |
-          pnpm run lint
           pnpm run build
-          pnpm run test
+          pnpm run test:prod

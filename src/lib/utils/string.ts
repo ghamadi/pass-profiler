@@ -2,23 +2,20 @@
  * Strips interleaving pairs of alphabets and digits from the input string.
  *
  * The function looks for sequences in a string that follow one of two patterns:
- * 1. Letter followed by a number, repeated at least twice (e.g., a1b2c3...).
- * 2. Number followed by a letter, repeated at least twice (e.g., 1a2b3c...).
+ * 1. Letter followed by a number, repeated at least twice (e.g., a1b2...).
+ * 2. Number followed by a letter, repeated at least twice (e.g., 1a2b...).
  *
  * Matching strings are reduced in length over three steps:
  * - by a quarter as an initial penalty
- * - by a quarter if the numbers correspond to the letter's position (e.g., A1b2)
- * - by a quarter if both letters in the pairs are of the same case (e.g., A3B7)
- *
- * @example
- * // returns 'a1b2'
- * removeInterleavingPairs('a1b2c3d4')
- *
- * // returns 'a1b5c3'
- * removeInterleavingPairs('a1b5c3d8')
+ * - by a quarter if the numbers correspond to the letter's position (e.g., A1c3)
+ * - by a quarter if both letters in the pairs are of the same case (e.g., A3C7)
+ * - by a quarter if the letters are sequential (e.g. a2B4)
  */
 export function stripInterleavingPairs(str: string) {
-  return str.replace(/([a-z][0-9]){2}|([0-9][a-z]){2}/gi, (match) => {
+  const interleavingPairsRegex = /([a-z][0-9]){2,}|([0-9][a-z]){2,}/gi;
+  const similarCaseRegex = /(^[a-z]+$)|(^[A-Z]+$)/;
+
+  return str.replace(interleavingPairsRegex, (match) => {
     const chars = match.match(/[a-z]/gi) ?? [];
     const digits = match.match(/[0-9]/g) ?? [];
 
@@ -27,16 +24,28 @@ export function stripInterleavingPairs(str: string) {
       return charCode === +digits[i];
     });
 
-    // in the worst case (e.g., a1b2) the pattern reduced to 1 character
-    // in the best case (e.g., A5b7) the pattern is reduced to 3 characters
-    let sanitizedLength = match.length * 0.75;
-    if (digitsMatchLetterPositions) {
-      sanitizedLength *= 0.75;
-    }
-    if (isLowerCase(chars?.join('')) || isUpperCase(chars.join(''))) {
-      sanitizedLength *= 0.75;
-    }
+    const areCharsOfSameCase = similarCaseRegex.test(chars.join(''));
 
+    const areCharsSequential =
+      chars.every((char, i) => {
+        let currCharCode = char.toLowerCase().charCodeAt(0);
+        let prevCharCode = chars[i - 1]?.toLocaleLowerCase().charCodeAt(0);
+        return !prevCharCode || currCharCode - prevCharCode === 1;
+      }) ||
+      chars.every((char, i) => {
+        let currCharCode = char.toLowerCase().charCodeAt(0);
+        let prevCharCode = chars[i - 1]?.toLocaleLowerCase().charCodeAt(0);
+        return !prevCharCode || currCharCode - prevCharCode === -1;
+      });
+
+    // in the worst case (e.g., a1b2) a pair is reduced to 1 character
+    // in the best case (e.g., A5b7) a pair is reduced to 3 characters
+    const penalty = [digitsMatchLetterPositions, areCharsOfSameCase, areCharsSequential].reduce(
+      (penalty, booleanValue) => (booleanValue ? penalty + 0.25 : penalty),
+      0.25
+    );
+
+    const sanitizedLength = Math.max(1, match.length * (1 - penalty));
     return match.slice(0, sanitizedLength);
   });
 }
@@ -49,31 +58,21 @@ export function stripInterleavingPairs(str: string) {
  * 2. Reverse sequential order (e.g., cba or 321) when direction is -1.
  * 
  * Note: The function is case-insensitive, and only considers sequences of length 3 or more.
- *
- * @example
- * // returns 'wcba'
- * stripSequentialStrings('wxyzcba', 1)
- *
- * // returns 'wxyzc'
- * stripSequentialStrings('wxyzcba', -1)
- *
  */
 export function stripSequentialStrings(str: string, direction: 1 | -1) {
   const isPairSequential = (letter1: string, letter2: string, direction: 1 | -1) => {
-    letter1 = letter1.toLocaleLowerCase();
-    letter2 = letter2.toLocaleLowerCase();
-    return letter2.charCodeAt(0) - letter1.charCodeAt(0) === direction;
+    const charCode1 = letter1.toLocaleLowerCase().charCodeAt(0);
+    const charCode2 = letter2.toLocaleLowerCase().charCodeAt(0);
+    return charCode2 - charCode1 === direction;
   };
 
-  // Extract the list sequences to be removed
-  const chars = str.split('');
-  const sequences: Set<string> = new Set([]);
-  for (let i = 0; i < chars.length - 1; ) {
-    let current = chars[i];
-    let next = chars[i + 1];
+  let output = '';
+  for (let i = 0; i < str.length; i++) {
+    let current = str[i];
+    let next = str[i + 1];
 
-    if (!isPairSequential(current, next, direction)) {
-      i++;
+    if (!next || !isPairSequential(current, next, direction)) {
+      output += current;
       continue;
     }
 
@@ -83,70 +82,58 @@ export function stripSequentialStrings(str: string, direction: 1 | -1) {
     do {
       sequence.push(next);
       current = next;
-      next = chars[++i + 1];
+      next = str[++i + 1];
     } while (!!next && isPairSequential(current, next, direction));
 
     if (sequence.length >= 3) {
-      sequences.add(sequence.join(''));
+      output += sequence[0];
+    } else {
+      output += sequence.join('');
     }
   }
-
-  // Prepare the output by replacing all sequences with their first element only
-  let output = str;
-  // sort from longest to shortest to handle edge cases such as `_123_123456`
-  [...sequences]
-    .sort((s1, s2) => s2.length - s1.length)
-    .forEach((sequence) => {
-      output = output.replace(regexp(sequence, 'gi'), sequence[0]);
-    });
 
   return output;
 }
 
 /**
- * Strips repeated sequences of characters in a string.
- * When a repeated sequence is found, it's replaced by a single instance of that sequence.
- *
- * @example
- * // returns 'abca'
- * stripRepeatedStrings('aaabcaaa')
- *
- * @example
- * // returns "JavaScriptJavaScriptJavaScript"
- * stripReatedStrings("JavaScript");
+ * Repeatedly shrinks the string by looking for increasingly longer recurring patterns
  */
 export function stripRepeatedStrings(str: string) {
-  // Any repeated pattern can at most be half of the string's length
-  // start by checking half the characters to see if they are repeated, and shrink the tested pattern
-  for (let i = Math.floor(str.length / 2); i > 0; i--) {
-    const pattern = new RegExp(`(.{${i}})\\1+`, 'g');
+  // Any pattern repeated across the string can at most be half of the string's length
+  let l = 0;
+  while (++l <= Math.floor(str.length / 2)) {
+    const pattern = new RegExp(`(.{${l}})\\1+`, 'gs');
     str = str.replace(pattern, '$1');
   }
   return str;
 }
 
-export function stripPattern(str: string, pattern: string) {
-  return str.replace(regexp(pattern, 'gi'), pattern[0]);
+/**
+ * Removes all matches of a given regular expression from the input string
+ */
+export function stripPattern(str: string, pattern: RegExp) {
+  if (!pattern) {
+    return str;
+  }
+  return str.replace(pattern, ($1) => $1[0] ?? '');
 }
 
 /**
- * Escapes special characters in a string and returns a regular expression.
- *
- * If the passed string is wrapped in slashes (e.g. `/[a-z]/`) then it is not escaped
+ * Internal helper function to convert a string to a valid Regular Expression
  */
-export function regexp(str: string, flags?: string) {
-  if (str.startsWith('/') && str.endsWith('/')) {
-    str = str.slice(1, -1);
-  } else {
-    str = str.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+export function toRegex(input: string, flagsParam = '') {
+  const sanitizeFlags = (flags: string) => {
+    return [...new Set(flags.split(''))].filter((flag) => /^[gimsuy]$/.test(flag)).join('');
+  };
+
+  // Check if the input is in regex form
+  const parts = input.match(/^\/(.*)\/([gimsuy]*)$/);
+  if (parts) {
+    let [, body, flags] = parts;
+    return new RegExp(body, sanitizeFlags(flags + flagsParam));
   }
-  return new RegExp(str, flags);
-}
 
-export function isUpperCase(str: string) {
-  return !!str.match(/^[A-Z]+$/);
-}
-
-export function isLowerCase(str: string) {
-  return !!str.match(/^[a-z]+$/);
+  // if parts is null, escape the special characters and build a regex from the string
+  const escapedString = input ? input.replace(/[.*+\-?^${}()|[\]\\]/g, '\\$&') : '^$';
+  return new RegExp(escapedString, sanitizeFlags(flagsParam));
 }

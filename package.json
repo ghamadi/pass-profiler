@@ -16,14 +16,14 @@
     "README.md"
   ],
   "scripts": {
-    "build": "rm -rf out && tsup src/index.ts --format cjs,esm --dts",
+    "build": "rm -rf dist && tsup src/index.ts --format cjs,esm --dts",
     "format": "prettier --write 'src/**/*.ts'",
     "lint": "tsc",
     "test": "jest",
     "test:unit": "jest unit",
     "test:e2e": "jest e2e",
     "test:prod": "NODE_ENV=production jest e2e",
-    "release": "pnpm run build && changeset publish",
+    "publish": "pnpm run build && changeset publish",
     "script": "tsup scripts/$npm_config_name.ts --out-dir scripts/out --silent && node scripts/out/$npm_config_name.cjs"
   },
   "devDependencies": {
