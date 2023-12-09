@@ -3,7 +3,7 @@ on:
   workflow_run:
     workflows: [CI]
     types: [completed]
-    branches: [develop]
+    branches: [development]
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
