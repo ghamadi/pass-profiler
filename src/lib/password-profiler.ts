@@ -11,7 +11,7 @@ import {
 } from '~/lib/utils/string';
 import { permute } from '~/lib/utils/array';
 import InvalidRangeError from '~/lib/errors/invalid-range';
-import { assert } from '~/lib/utils/errorts';
+import { assert } from '~/lib/utils/errors';
 
 export type Sanitizers = ((str: string) => string)[];
 
@@ -67,7 +67,7 @@ export default class PasswordProfiler {
   private setupSanitizersList(options: ProfilerOptions) {
     assert(
       this.rejectedPatterns,
-      'Initialize `rejectedPatterns` before calling `setupSanitizersList`.'
+      'Run `setupRejectedPatterns` before calling `setupSanitizersList`.'
     );
 
     const sanitizersList: SanitizersList = permute(
@@ -77,14 +77,17 @@ export default class PasswordProfiler {
         (str) => stripSequentialStrings(str, -1),
         (str) => stripInterleavingPairs(str),
       ]
-    ).map((sanitizers) => [
-      (str) =>
+    );
+
+    // Add the rejected patterns sanitizer to the beginning of sanitizing set
+    sanitizersList.forEach((sanitizers) => {
+      sanitizers.unshift((str) =>
         this.rejectedPatterns.reduce(
           (out, pattern) => stripPattern(out, toRegex(pattern, 'gi')),
           str
-        ),
-      ...sanitizers,
-    ]);
+        )
+      );
+    });
 
     return sanitizersList;
   }

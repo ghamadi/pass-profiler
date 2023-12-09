@@ -109,10 +109,7 @@ export function stripRepeatedStrings(str: string) {
 }
 
 /**
- * Removes all matches of a given pattern
- *
- * The string pattern can be in the form of a plain string or a regular expressiion (e.g., "/[a-z]/i").
- * If a plain string is provided, the matching to strip the pattern is
+ * Removes all matches of a given regular expression from the input string
  */
 export function stripPattern(str: string, pattern: RegExp) {
   if (!pattern) {
