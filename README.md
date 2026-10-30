@@ -1,3 +1,12 @@
+> [!WARNING]
+> **This project is archived and no longer maintained.**
+>
+> `pass-profiler` was a small personal experiment, and the package was removed from npm on 12 October 2026. `npm install pass-profiler` no longer works.
+>
+> The code remains here for reference and should not be used in production.
+
+---
+
 ## Overview
 
 A lightweight and efficient library designed to analyze and assess the strength of passwords. The strength-measuring algorithm relies on entropy computation while being aware of predictable patterns and commonly used keywords within the password.
@@ -35,10 +44,6 @@ Entropy is calculated based on the formula `E = log_2(N^L)` where:
 - `L` is the length of the _sanitized_ password
 
 Entropy values are mapped to strength labels based on a predefined list. Users can override this list if needed.
-
-## Motivation
-
-For an in-depth exploration of the rationale behind our unique approach to measuring password strength, we invite you to read our [blog post](https://dev.to/ghamadi/rethinking-password-strength-estimation-beyond-composition-rules-408i). The post discusses why we ventured beyond traditional composition rules in attempting to find a reliable password strength estimation method.
 
 ## Installation
 
